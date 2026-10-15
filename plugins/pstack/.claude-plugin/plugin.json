@@ -4,6 +4,8 @@
   "author": {
     "name": "Marcus McCurdy"
   },
+  "homepage": "https://github.com/volker48/mcstack/tree/main/plugins/pstack",
+  "repository": "https://github.com/volker48/mcstack",
   "license": "MIT",
   "keywords": ["pstack", "poteto-mode", "workflow", "principles", "subagents", "unslop"]
 }

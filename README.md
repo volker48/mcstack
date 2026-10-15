@@ -8,19 +8,19 @@ A Claude Code plugin marketplace.
 
 ## Install
 
-The marketplace lives in this repository's `.claude-plugin/marketplace.json`. Replace `<owner>` with the GitHub account that hosts this repository.
+The marketplace lives in this repository's `.claude-plugin/marketplace.json`.
 
 In Claude Code:
 
 ```text
-/plugin marketplace add <owner>/mcstack
+/plugin marketplace add volker48/mcstack
 /plugin install pstack@mcstack
 ```
 
 Or from a shell:
 
 ```bash
-claude plugin marketplace add <owner>/mcstack
+claude plugin marketplace add volker48/mcstack
 ```
 
 ```bash
@@ -33,7 +33,7 @@ To set up every machine the same way, add this to `~/.claude/settings.json` (for
 {
   "extraKnownMarketplaces": {
     "mcstack": {
-      "source": { "source": "github", "repo": "<owner>/mcstack" }
+      "source": { "source": "github", "repo": "volker48/mcstack" }
     }
   },
   "enabledPlugins": {

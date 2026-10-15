@@ -34,7 +34,7 @@ When the model config is missing and it matters, ask whether the user wants to p
 
 ## Get set up
 
-1. Add the marketplace and install the plugin: `/plugin marketplace add <owner>/mcstack`, then `/plugin install pstack`. The repository README has the details.
+1. Add the marketplace and install the plugin: `/plugin marketplace add volker48/mcstack`, then `/plugin install pstack@mcstack`. The repository README has the details.
 2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model and effort to each role, and writes `~/.claude/pstack-models.md`. Skills read it at spawn time.
 3. Start a real task with `/poteto-mode`, a goal, and a check that can pass or fail.
 

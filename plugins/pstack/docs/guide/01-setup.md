@@ -7,7 +7,7 @@ In this page you install the plugin, pick which models pstack uses, and run your
 In Claude Code, add the marketplace and install the plugin:
 
 ```text
-/plugin marketplace add <owner>/mcstack
+/plugin marketplace add volker48/mcstack
 /plugin install pstack@mcstack
 ```
 
