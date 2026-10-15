@@ -1,6 +1,6 @@
 # mcstack
 
-A Claude Code port of [pstack](https://github.com/cursor/plugins/tree/main/pstack), the Cursor plugin by [Lauren Tan (poteto)](https://x.com/poteto). The plugin is named `mcstack` and the main entry point is `/bde-mode` (upstream `/poteto-mode`). pstack is a set of skills, playbooks, and subagents for rigorous agent work: understand before building, verify against the real artifact, and keep prose and code small.
+A Claude Code port of [pstack](https://github.com/cursor/plugins/tree/main/pstack), the Cursor plugin by [Lauren Tan (poteto)](https://x.com/poteto). The plugin is named `mcstack` and the main entry point is `/bde-mode` (upstream `/poteto-mode`). mcstack is a set of skills, playbooks, and subagents for rigorous agent work: understand before building, verify against the real artifact, and keep prose and code small.
 
 ## Source and license
 
@@ -16,11 +16,11 @@ See the [repository README](../../README.md).
 
 ## Get started
 
-1. Run `/setup-pstack` to choose a model and effort for each role. It writes `~/.claude/pstack-models.md`. Skipping it is fine, every role has a default.
+1. Run `/setup-mcstack` to choose a model and effort for each role. It writes `~/.claude/mcstack-models.md`. Skipping it is fine, every role has a default.
 2. Start non-trivial work with `/bde-mode <task>`. It matches the task to a playbook, copies the steps into the todo list, and reads the other skills as the steps need them.
-3. Lost? `/poteto-help <question>`.
+3. Lost? `/bde-help <question>`.
 
-Every skill except `/setup-pstack` sets `disable-model-invocation: true`, as upstream does. They load only when you type them or when `/bde-mode` reads them by path. Plugin skills are also reachable as `/mcstack:<name>`.
+Every skill except `/setup-mcstack` sets `disable-model-invocation: true`, as upstream does. They load only when you type them or when `/bde-mode` reads them by path. Plugin skills are also reachable as `/mcstack:<name>`.
 
 The [guide](./docs/guide/README.md) walks through a first real task. It was written for Cursor and is only lightly adapted.
 
@@ -31,8 +31,9 @@ The [guide](./docs/guide/README.md) walks through a first real task. It was writ
 | `Task` tool, `subagent_type: generalPurpose` | `Agent` tool, `subagent_type: "general-purpose"` |
 | `readonly: true` subagents | `Explore` for exploration, otherwise `general-purpose` told not to edit |
 | `pstack` plugin, `/poteto-mode` | `mcstack` plugin, `/bde-mode` |
-| `poteto-agent`, `comment-sicko` subagents | `mcstack:poteto-agent`, `mcstack:comment-sicko` |
-| `~/.cursor/rules/pstack-models.mdc` (always-applied rule) | `~/.claude/pstack-models.md`, read by the skills before spawning |
+| `/setup-pstack`, `/poteto-help` | `/setup-mcstack`, `/bde-help` |
+| `poteto-agent`, `comment-sicko` subagents | `mcstack:bde-agent`, `mcstack:comment-sicko` |
+| `~/.cursor/rules/pstack-models.mdc` (always-applied rule) | `~/.claude/mcstack-models.md`, read by the skills before spawning |
 | Model slugs such as `claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast` | `<model>-<effort>` pairs such as `opus-xhigh`, `sonnet-xhigh`, set as the Agent `model` and `effort` |
 | Opus vs Grok review panels | Opus vs Sonnet panels |
 | Cloud subagents (`environment: "cloud"`) | Background agents with `isolation: "worktree"`, or `"remote"` where available |
@@ -55,6 +56,6 @@ Not ported:
 Known gaps:
 
 - The `scripts/` under `bde-mode` are unchanged apart from the transcript path in `worktree-audit.sh`. They need [Bun](https://bun.sh).
-- `poteto-agent` sets `background: true`, as upstream did, so it always runs in the background even when a caller passes `run_in_background: false`.
+- `bde-agent` sets `background: true`, as upstream did, so it always runs in the background even when a caller passes `run_in_background: false`.
 - `watch-pr` still recognizes Cursor's Bugbot comments. That is GitHub-side behavior and still useful if Bugbot reviews your repos.
 - The orchestrate and autopilot playbooks assume large agent fleets. Claude Code runs them with flat fan-out from one coordinator, which is less proven than the Cursor setup they were tuned on.

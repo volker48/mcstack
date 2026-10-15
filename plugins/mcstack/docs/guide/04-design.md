@@ -44,7 +44,7 @@ flowchart LR
     H --> I[Verify]
 ```
 
-The panel comes from your [`/setup-pstack`](../../skills/setup-pstack/SKILL.md) configuration, and you can adjust it per task. Ask for more candidates when the decision matters, fewer when it doesn't:
+The panel comes from your [`/setup-mcstack`](../../skills/setup-mcstack/SKILL.md) configuration, and you can adjust it per task. Ask for more candidates when the decision matters, fewer when it doesn't:
 
 ```text
 /arena this, 5 candidates. the cache key format is expensive to change later.
@@ -100,7 +100,7 @@ Writing the tutorial first forces the caller's view. You describe the API to a h
 
 ## Plan after the design settles
 
-pstack has no planning skill, on purpose. When you do want a written plan, ask for it once the design is settled:
+mcstack has no planning skill, on purpose. When you do want a written plan, ask for it once the design is settled:
 
 ```text
 /bde-mode turn this design into a plan. small verifiable PRs, each with its own verification steps.

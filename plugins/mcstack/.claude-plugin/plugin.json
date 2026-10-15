@@ -8,5 +8,5 @@
   "homepage": "https://github.com/volker48/mcstack/tree/main/plugins/mcstack",
   "repository": "https://github.com/volker48/mcstack",
   "license": "MIT",
-  "keywords": ["pstack", "bde-mode", "workflow", "principles", "subagents", "unslop"]
+  "keywords": ["mcstack", "bde-mode", "workflow", "principles", "subagents", "unslop"]
 }

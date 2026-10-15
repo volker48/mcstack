@@ -24,7 +24,7 @@ That covers the session (`<session-uuid>.jsonl`) and subagent (`<session-uuid>/s
 
 One message, three `Agent` calls, `subagent_type: "general-purpose"`. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references.
 
-Each reviewer and the synthesizer name a role line in the `~/.claude/pstack-models.md` config and a default. Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
+Each reviewer and the synthesizer name a role line in the `~/.claude/mcstack-models.md` config and a default. Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
 
 | Lens | Role line | Default `model` | Prompt template |
 |---|---|---|---|

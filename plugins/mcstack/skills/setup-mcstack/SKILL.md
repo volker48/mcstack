@@ -1,11 +1,11 @@
 ---
-name: setup-pstack
-description: Configure which models pstack uses per role and at what reasoning budget. Writes a config file that overrides the skill defaults. Use for /setup-pstack, "configure pstack models", "pstack budget", or changing pstack's model choices.
+name: setup-mcstack
+description: Configure which models mcstack uses per role and at what reasoning budget. Writes a config file that overrides the skill defaults. Use for /setup-mcstack, "configure mcstack models", "mcstack budget", or changing mcstack's model choices.
 ---
 
-# Setup pstack
+# Setup mcstack
 
-Write `~/.claude/pstack-models.md`, the config pstack's skills read to pick each role's model and effort.
+Write `~/.claude/mcstack-models.md`, the config mcstack's skills read to pick each role's model and effort.
 
 ## Steps
 
@@ -15,7 +15,7 @@ A role value is `<model>-<effort>`. `<model>` is an Agent tool `model` value: `o
 
 ### 2. Load current state
 
-The default role-to-model mapping is the config shape shown in step 5 below. If `~/.claude/pstack-models.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `how critics`, is from a retired role. Drop it.
+The default role-to-model mapping is the config shape shown in step 5 below. If `~/.claude/mcstack-models.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `how critics`, is from a retired role. Drop it.
 
 ### 3. Budget, map, and confirm
 
@@ -36,10 +36,10 @@ Every value written must be a valid `<model>-<effort>` pair from step 1, or an a
 
 ### 5. Write the config
 
-Write `~/.claude/pstack-models.md` with a `# budget` line with the chosen label and its target effort, and one line per role, using the same labels bde-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
+Write `~/.claude/mcstack-models.md` with a `# budget` line with the chosen label and its target effort, and one line per role, using the same labels bde-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
 
 ```
-# pstack model configuration. One line per role. Delete a line to fall back to the skill default.
+# mcstack model configuration. One line per role. Delete a line to fall back to the skill default.
 # A value is <model>-<effort>: set the Agent tool's `model` and `effort` from it.
 # `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit Agent `model` and `effort`). Alias entries in a panel list still count toward its fan-out.
 # budget: large (xhigh)

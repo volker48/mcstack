@@ -1,14 +1,14 @@
 ---
-name: poteto-help
-description: Guides users through pstack setup, /bde-mode, and picking the skill, playbook, or principle for a task. Type /poteto-help with a question.
+name: bde-help
+description: Guides users through mcstack setup, /bde-mode, and picking the skill, playbook, or principle for a task. Type /bde-help with a question.
 disable-model-invocation: true
 ---
 
-# Poteto help
+# BDE help
 
-Answer the user's question about pstack, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and a pstack run spends real tokens, so let them send the prompt.
+Answer the user's question about mcstack, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and an mcstack run spends real tokens, so let them send the prompt.
 
-A message that asks for work, such as "use pstack to fix this bug", is not a help question. Read [`bde-mode`](../bde-mode/SKILL.md), do the work under it, and mention once that typing `/bde-mode` at the start of each task keeps it on.
+A message that asks for work, such as "use mcstack to fix this bug", is not a help question. Read [`bde-mode`](../bde-mode/SKILL.md), do the work under it, and mention once that typing `/bde-mode` at the start of each task keeps it on.
 
 This file maps questions to the skills and guide pages that hold the answers. Those files own the details. Read the file you route to before you quote it, and trust it when it disagrees with this map. The links here point into the installed plugin, which the user may not be able to open, so give the user the file's absolute path under `/`, which they can open locally.
 
@@ -20,29 +20,29 @@ Infer the need from the message and the conversation. A named situation, such as
 - Start a task with `/bde-mode`
 - Pick a skill for a situation
 - Fix a run that went wrong
-- Make pstack my own
+- Make mcstack my own
 
 Check the state that changes the answer, and mention it only when it does:
 
-- No `~/.claude/pstack-models.md` means `/setup-pstack` hasn't run for this user, so every role uses its default model.
+- No `~/.claude/mcstack-models.md` means `/setup-mcstack` hasn't run for this user, so every role uses its default model.
 - No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/create-verification-skill` when the question is about proving a change works.
 
 When the model config is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:
 
-- Now: give them `/setup-pstack` to type, and answer their question too.
-- Later: answer their question, and add one line saying every role keeps its default model until they run `/setup-pstack`.
+- Now: give them `/setup-mcstack` to type, and answer their question too.
+- Later: answer their question, and add one line saying every role keeps its default model until they run `/setup-mcstack`.
 
 ## Get set up
 
 1. Add the marketplace and install the plugin: `/plugin marketplace add volker48/mcstack`, then `/plugin install mcstack@mcstack`. The repository README has the details.
-2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model and effort to each role, and writes `~/.claude/pstack-models.md`. Skills read it at spawn time.
+2. Run [`/setup-mcstack`](../setup-mcstack/SKILL.md). It asks for a reasoning budget, maps a model and effort to each role, and writes `~/.claude/mcstack-models.md`. Skills read it at spawn time.
 3. Start a real task with `/bde-mode`, a goal, and a check that can pass or fail.
 
-Installing changes nothing until the user invokes a skill. Only `/setup-pstack` loads from the user's words. The [README](../../README.md) and [guide page 1](../../docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
+Installing changes nothing until the user invokes a skill. Only `/setup-mcstack` loads from the user's words. The [README](../../README.md) and [guide page 1](../../docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
 
-If cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on a cheaper model. Moving roles from `opus` to `sonnet` or `haiku`, or lowering effort, also saves tokens. A shorter panel list runs fewer subagents, one for each entry. Save `/bde-mode` for work that needs rigor.
+If cost is the worry, say where the tokens go and how to spend fewer. mcstack spends extra tokens on subagents and review panels. Rerun `/setup-mcstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on a cheaper model. Moving roles from `opus` to `sonnet` or `haiku`, or lowering effort, also saves tokens. A shorter panel list runs fewer subagents, one for each entry. Save `/bde-mode` for work that needs rigor.
 
-pstack was built for Cursor and this copy is ported to Claude Code. Model diversity is narrower here. Panels mix `opus` and `sonnet` instead of different vendors, and per-role effort replaces Cursor's per-model reasoning slugs.
+mcstack is ported to Claude Code from pstack, which was built for Cursor. Model diversity is narrower here. Panels mix `opus` and `sonnet` instead of different vendors, and per-role effort replaces Cursor's per-model reasoning slugs.
 
 ## Start a task with `/bde-mode`
 
@@ -53,7 +53,7 @@ Whether `/bde-mode` stays on depends on how the user starts it:
 - `/bde-mode` loads the skill into the conversation. It fades as the chat moves on and context gets compacted.
 - To keep it on for a project, add a line to the project's `CLAUDE.md` asking the agent to read the bde-mode skill for non-trivial tasks. Otherwise start each new task with `/bde-mode`.
 
-Link [Claude Code's skills docs](https://code.claude.com/docs/en/skills) when this comes up. Mid-chat, "new task" makes the mode match a fresh playbook. `/bde-mode` already uses `poteto-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: "mcstack:poteto-agent"`.
+Link [Claude Code's skills docs](https://code.claude.com/docs/en/skills) when this comes up. Mid-chat, "new task" makes the mode match a fresh playbook. `/bde-mode` already uses `bde-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: "mcstack:bde-agent"`.
 
 ## Pick a skill
 
@@ -85,11 +85,11 @@ The default answer is `/bde-mode`, which runs most of the others when its steps 
 | Vet a performance number before reporting or acting on it | [`/benchmark-checklist`](../benchmark-checklist/SKILL.md) |
 | Run a large or cross-cutting change, or one to review after stepping away | [`/figure-it-out`](../figure-it-out/SKILL.md) |
 | Keep a decision log during a run, and review it afterward | [`/show-me-your-work`](../show-me-your-work/SKILL.md) |
-| Pick a model for each role and a reasoning budget | [`/setup-pstack`](../setup-pstack/SKILL.md) |
+| Pick a model for each role and a reasoning budget | [`/setup-mcstack`](../setup-mcstack/SKILL.md) |
 | Turn their own working habits into a personal mode skill | [`/automate-me`](../automate-me/SKILL.md) |
 | Turn what a finished task taught into skill edits | [`/reflect`](../reflect/SKILL.md) |
 | Stop agents from repeating the same mistakes in this repo | [`/correct`](../correct/SKILL.md) |
-| Find their way around pstack | `/poteto-help` |
+| Find their way around mcstack | `/bde-help` |
 
 If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.
 
@@ -102,10 +102,10 @@ Close calls:
 - `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
 - `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
 
-Not in pstack:
+Not in mcstack:
 
 - `/simplify`, `/loop`, and `/code-review` are Claude Code built-ins. `skill-creator` is Anthropic's skill-authoring skill.
-- pstack has no `/orchestrate` skill. Orchestrate is a `/bde-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
+- mcstack has no `/orchestrate` skill. Orchestrate is a `/bde-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles
 
@@ -120,7 +120,7 @@ Playbooks are step lists inside `/bde-mode`, not skills, so they have no slash c
 
 Without `/bde-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`bde-mode`](../bde-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
 
-pstack has no planning skill. Claude Code's plan mode works alongside it. For work that spans phases or stacked PRs, asking `/bde-mode` for a plan runs the [Multi-phase plan playbook](../bde-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/architect` settles it in code first.
+mcstack has no planning skill. Claude Code's plan mode works alongside it. For work that spans phases or stacked PRs, asking `/bde-mode` for a plan runs the [Multi-phase plan playbook](../bde-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/architect` settles it in code first.
 
 Principles are one-rule skills that `/bde-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in "apply prove it works. show me the real output." Typing `/principle-<name>` still loads one on demand. [Guide page 8](../../docs/guide/08-principles.md) lists them.
 
@@ -130,16 +130,16 @@ Principles are one-rule skills that `/bde-mode` reads and cites in its replies. 
 |---|---|
 | The mode stopped applying after a few turns | Start each task with `/bde-mode`, or point the project's `CLAUDE.md` at it. |
 | A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
-| A new model choice had no effect | Check `~/.claude/pstack-models.md` has the line, then ask the agent to re-read it before the next spawn. |
+| A new model choice had no effect | Check `~/.claude/mcstack-models.md` has the line, then ask the agent to re-read it before the next spawn. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
-| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words. The others load when the user types them or when `/bde-mode` runs them, and it doesn't run every skill. |
+| A skill didn't load on its own | Only `/setup-mcstack` loads from the user's words. The others load when the user types them or when `/bde-mode` runs them, and it doesn't run every skill. |
 | Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |
 | An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See [guide page 7](../../docs/guide/07-overnight.md). |
 | The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |
 
 For a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](../../docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.
 
-## Make pstack my own
+## Make mcstack my own
 
 - [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/bde-mode`.
 - [`/reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.

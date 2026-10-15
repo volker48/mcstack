@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Explorers spawn with `subagent_type: "Explore"`. Explainers spawn with `subagent_type: "general-purpose"` and an instruction not to edit files. Explorers use the `how explorer` line in the `~/.claude/pstack-models.md` config (default `sonnet-xhigh`), and every explainer uses the `how explainer` line (default `opus-xhigh`). Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
+Explorers spawn with `subagent_type: "Explore"`. Explainers spawn with `subagent_type: "general-purpose"` and an instruction not to edit files. Explorers use the `how explorer` line in the `~/.claude/mcstack-models.md` config (default `sonnet-xhigh`), and every explainer uses the `how explainer` line (default `opus-xhigh`). Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
 
 ## 1. Assess complexity
 

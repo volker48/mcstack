@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each spawn below names a role line in the `~/.claude/pstack-models.md` config and a default. Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
+Each spawn below names a role line in the `~/.claude/mcstack-models.md` config and a default. Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
 
 Every spawn is `subagent_type: "general-purpose"`. **Do not use `Explore` or another read-only agent type.** The MCP-backed investigators and the synthesizer's citation spot-checks need MCP tools. Investigators still shouldn't write anything.
 
