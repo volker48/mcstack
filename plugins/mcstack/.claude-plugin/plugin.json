@@ -1,7 +1,7 @@
 {
   "name": "mcstack",
   "displayName": "mcstack",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "if you want to go fast, go deep first. Rigorous agent workflows, review panels, and engineering principles, ported to Claude Code from Lauren Tan's pstack for Cursor.",
   "author": {
     "name": "Marcus McCurdy"
