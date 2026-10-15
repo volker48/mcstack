@@ -4,7 +4,7 @@ A Claude Code plugin marketplace.
 
 | Plugin | What it is |
 |---|---|
-| [`pstack`](./plugins/pstack) | Rigorous agent workflows, review panels, and engineering principles, ported from Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) for Cursor. |
+| [`mcstack`](./plugins/mcstack) | Rigorous agent workflows, review panels, and engineering principles, ported from Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) for Cursor. |
 
 ## Install
 
@@ -14,7 +14,7 @@ In Claude Code:
 
 ```text
 /plugin marketplace add volker48/mcstack
-/plugin install pstack@mcstack
+/plugin install mcstack@mcstack
 ```
 
 Or from a shell:
@@ -24,7 +24,7 @@ claude plugin marketplace add volker48/mcstack
 ```
 
 ```bash
-claude plugin install pstack@mcstack
+claude plugin install mcstack@mcstack
 ```
 
 To set up every machine the same way, add this to `~/.claude/settings.json` (for example from your dotfiles). Claude Code clones the marketplace and installs the plugin on the next session start. This shape comes from the plugin docs and has not been tested here yet.
@@ -37,7 +37,7 @@ To set up every machine the same way, add this to `~/.claude/settings.json` (for
     }
   },
   "enabledPlugins": {
-    "pstack@mcstack": true
+    "mcstack@mcstack": true
   }
 }
 ```

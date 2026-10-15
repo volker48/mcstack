@@ -1,0 +1,12 @@
+{
+  "name": "mcstack",
+  "displayName": "mcstack",
+  "description": "if you want to go fast, go deep first. Rigorous agent workflows, review panels, and engineering principles, ported to Claude Code from Lauren Tan's pstack for Cursor.",
+  "author": {
+    "name": "Marcus McCurdy"
+  },
+  "homepage": "https://github.com/volker48/mcstack/tree/main/plugins/mcstack",
+  "repository": "https://github.com/volker48/mcstack",
+  "license": "MIT",
+  "keywords": ["pstack", "bde-mode", "workflow", "principles", "subagents", "unslop"]
+}

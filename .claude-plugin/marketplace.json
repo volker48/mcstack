@@ -6,8 +6,9 @@
   },
   "plugins": [
     {
-      "name": "pstack",
-      "source": "./plugins/pstack",
+      "name": "mcstack",
+      "displayName": "mcstack",
+      "source": "./plugins/mcstack",
       "description": "Rigorous agent workflows, review panels, and engineering principles. Ported to Claude Code from Lauren Tan's pstack for Cursor.",
       "category": "development"
     }
