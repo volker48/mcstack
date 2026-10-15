@@ -1,0 +1,15 @@
+{
+  "name": "mcstack",
+  "description": "Marcus McCurdy's Claude Code plugins.",
+  "owner": {
+    "name": "Marcus McCurdy"
+  },
+  "plugins": [
+    {
+      "name": "pstack",
+      "source": "./plugins/pstack",
+      "description": "Rigorous agent workflows, review panels, and engineering principles. Ported to Claude Code from Lauren Tan's pstack for Cursor.",
+      "category": "development"
+    }
+  ]
+}
