@@ -115,7 +115,7 @@ function expandSkill(command: string): string {
 }
 ```
 
-- For a visual UI, layout, state comparison, or concept too dense for Mermaid, write one focused HTML file — a diagram, an infographic, or a short slide deck, whichever fits the point. Match the product's colors, type, spacing, and components; use real labels and data; support desktop and mobile. Then open it for the user with the platform's launcher (`open` on macOS, `xdg-open` on Linux, `start ""` on Windows), or a browser tool if one is available:
+- For a visual UI, layout, state comparison, or concept too dense for Mermaid, write one focused HTML file — a diagram, an infographic, or a short slide deck, whichever fits the point. Match the product's colors, type, spacing, and components; use real labels and data; support desktop and mobile. Then open it for the user with the platform's launcher (`open` on macOS, `xdg-open` on Linux, `cmd.exe /c start "" "<path>"` on Windows, with `//c` in Git Bash), or a browser tool if one is available:
 
 ```
 Bash(open "path/to/show-me-<kebab-case-slug>.html")
