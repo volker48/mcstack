@@ -47,6 +47,11 @@ The [guide](./docs/guide/README.md) walks through a first real task. It was writ
 | `.cursor/skills/` | `.claude/skills/` |
 | `is_background: true` agent frontmatter | `background: true` |
 
+Added from other sources (MIT, notices in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES)):
+
+- `/retro` from [`mattpocock/skills`](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) (commit `49dd158`). It points at `technical-writing`, `reflect`, `interrogate`, and `skill-creator` in place of upstream's `writing-for-agents` skill and generic reviewer.
+- `/show-me` from [`humanlayer/skills`](https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me) (commit `653b641`).
+
 Not ported:
 
 - `make-bot-ui`. It builds a UI for Cursor's Grok Bot webhooks, which have no Claude Code counterpart.
