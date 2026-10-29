@@ -64,6 +64,7 @@ The default answer is `/bde-mode`, which runs most of the others when its steps 
 | Do any non-trivial task with rigor | [`/bde-mode`](../bde-mode/SKILL.md) |
 | Check that the agent understood their goal and the problem before it starts | [`/in-your-own-words`](../in-your-own-words/SKILL.md) |
 | Aim a task higher before starting: more expert, more outcome-focused, not overspecified | [`/sharpen`](../sharpen/SKILL.md) |
+| See a task or prompt raised by outcome, expert depth, and other fields, with a rewritten prompt | [`/be-ambitious`](../be-ambitious/SKILL.md) |
 | Know how code works now, or where new code should live | [`/how`](../how/SKILL.md) |
 | Know why code is shaped this way, or where a number came from | [`/why`](../why/SKILL.md) |
 | Understand a change or subsystem, explained plainly | [`/teach`](../teach/SKILL.md) |
@@ -97,6 +98,7 @@ If a skill directory next to this one is missing from the table, read its frontm
 
 Close calls:
 
+- `/sharpen` applies the expert-depth questions silently and does the work. `/be-ambitious` shows the plan across Altitude, Depth, and Range, and hands back a rewritten prompt. It stops there for a prompt and starts the work for a task.
 - `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.
 - `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.
 - `/architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.

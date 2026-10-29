@@ -51,6 +51,7 @@ Added from other sources (MIT, notices in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NO
 
 - `/retro` from [`mattpocock/skills`](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) (commit `49dd158`). It points at `technical-writing`, `reflect`, `interrogate`, and `skill-creator` in place of upstream's `writing-for-agents` skill and generic reviewer.
 - `/show-me` from [`humanlayer/skills`](https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me) (commit `653b641`).
+- `/be-ambitious`, merged from [`robonuggets/be-ambitious`](https://github.com/robonuggets/be-ambitious) (commit `dc116a3`) and [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/main/be-ambitious) (commit `7dc63b7`), both built on Felix Rieseberg's [How to be more ambitious](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/). It keeps RoboNuggets' Altitude, Depth, and Range structure, takes DannyMac180's concrete Depth answers and pass-and-fail judge, drops the motivational narrative, and points at `sharpen`, `swarm`, `arena`, `figure-it-out`, and `principle-prove-it-works`.
 
 Not ported:
 
