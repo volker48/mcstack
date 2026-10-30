@@ -14,8 +14,8 @@ The **sharpen** skill applies the Depth questions silently and gets on with the 
 
 1. **Better, not bigger.** Each type raises the outcome, the standard, or the set of perspectives. None of them adds deliverables, features, or side quests. Drop any suggestion that makes the job larger without making it better.
 2. **Do what the expert does, not how they talk.** Use the field's methods and instruments. New vocabulary on old methods is role play: the transcript gets weirder and the result stays the same.
-3. **An outside judge decides.** Never grade your own work. Name something other than you or the user that shows the result is right (a test, a benchmark, a reproduction, held-out data, a measurement, a real user's behavior), and say what counts as a pass and what counts as a fail. Prefer a judge you can run for fast feedback.
-4. **Treat the hard target as reasonable, and report it honestly.** Specific hard goals beat "do your best". A hard target raises the standard for the same deliverable. It is not a license to widen scope. A missed target with real numbers is a good result. A faked one is not.
+3. **An outside judge decides.** Never grade your own work. Name something other than you or the user that shows the result is right (a test, a benchmark, a reproduction, held-out data, a measurement, a real user's behavior), and say what counts as a pass and what counts as a fail. The first judge is one you run yourself: when a design choice decides whether you can run it, settle it in favor of running it instead of asking. Human testers judge last. Your own tests, the defects you planted on purpose, and a subagent's work checked against your own spec are not outside judges.
+4. **Treat the hard target as reasonable, and report it honestly.** Specific hard goals beat "do your best". A hard target raises the standard for the same deliverable. It is not a license to widen scope. A missed target with real numbers is a good result. A faked one is not. Honest reporting excuses a missed target, not a skipped fix: a known path that silently loses the user's work gets fixed before you hand back.
 5. **Get the access, don't fake it.** Ambition needs a machine you can install tools on and the real data. If either is missing, name what is missing and what it would unlock. If you don't know a field well enough to name its sources or tools, say so. Never invent a source, tool, or result.
 6. **Ambition raises the standard, not the permissions.** Ask first when a step replaces what the user asked for instead of raising it, spends money, or can't be undone.
 
@@ -65,7 +65,7 @@ Be concrete in each answer. Name the actual thing, not the category.
 1. **The expert moves.** The two or three moves that separate expert work from competent work here: state the decision the work serves, check base rates, reproduce before fixing, write the counter-argument.
 2. **The rawest material.** The dataset, not the chart. The filing, not the article. The logs and the code, not the bug report. The methods section, not the abstract. Say where it lives.
 3. **The instruments.** Where you'd reach for a markdown table, a data scientist reaches for a database and a statistical model. Name each technique, library, or command, and why it fits.
-4. **The judge.** Rule 3, with its pass and fail.
+4. **The judge.** Rule 3, with its pass and fail. A judge proves only what it exercises. When new state points into other data, the judge also exercises every other writer of that data. Once the core passes, name the seams it leaves out (component lifecycle and async work, state held only in the UI, the client-server contract) and give each one a check.
 
 Then push past the field's habits:
 
@@ -87,11 +87,16 @@ In this order:
 1. **The goal beyond the goal**, in one line.
 2. **The types that fit**, one line each on why, and the ones you skipped.
 3. **The plan** for each picked type. Altitude: the ladder. Depth: the field, the four answers, and the hard target. Range: the verbs, then each crew member as field, the job they actually do, and the method or tool they use.
-4. **What it needs**: data, tools, and access, each marked as present or missing.
+4. **What it needs**: data, tools, and access, each marked as present or missing, and the work already in flight on each cited issue (`gh pr list`, `git worktree list`). Base any conflict warning on the files the other branch actually changes.
 5. **The rewritten prompt** in one fenced block, in the user's voice, about as long as it needs to be. It starts from the raw material, names the methods, and ends with the outside judge and its pass and fail.
 6. **Next.** Pick the highest rung you can finish and check with the access you have now. For a prompt to improve, name that rung, offer in one line to run it, and stop. For a task to do, name it in one line and start, unless rule 6 says to ask. If even the first rung needs access you don't have, ask for it and stop.
 
-When you do the work, verify against the judge before you call it done (the **principle-prove-it-works** skill). If the chosen rung spans many phases or runs while the user is away, run it through the **figure-it-out** skill, which keeps a **show-me-your-work** decision trail.
+When you do the work, verify against the judge before you call it done (the **principle-prove-it-works** skill):
+
+- Check each pass/fail clause of the rewritten prompt's judge against what actually ran. Report every clause that did not run as unmet.
+- Before you hand back or open a PR, run an independent review of the diff: the **code-review** skill, plus **security-review** when routes or auth change.
+
+Only the user can start the skills from this plugin that this file names. The Skill tool can't call them, so read each one's SKILL.md and follow it. If the chosen rung spans many phases or runs while the user is away, offer `/figure-it-out <rewritten prompt>` under Next. When you do the work yourself, read show-me-your-work's SKILL.md and keep its decision log in a file, so the lessons survive a context compaction.
 
 ## Example
 
