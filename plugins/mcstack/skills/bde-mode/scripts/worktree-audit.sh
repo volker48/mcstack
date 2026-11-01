@@ -38,11 +38,15 @@ if [ -z "$base" ]; then
 	echo "warn: no -b given; MERGED checks against $base" >&2
 fi
 
+# Network calls get a deadline, since a stalled fetch or PR list would hang
+# the audit. macOS has no timeout(1); perl's alarm survives the exec.
+bounded() { perl -e 'alarm shift; exec @ARGV or die "exec $ARGV[0]: $!\n"' "$@"; }
+
 # The base drives the merge check. The fetch is best-effort (stale is fine for
 # a first pass) and runs before the check, since -b may name a branch not
 # fetched yet. The explicit refspec creates it even in a single-branch clone.
 case "$base" in
-origin/*) git fetch origin "+refs/heads/${base#origin/}:refs/remotes/$base" --quiet 2>/dev/null \
+origin/*) bounded 60 git fetch origin "+refs/heads/${base#origin/}:refs/remotes/$base" --quiet 2>/dev/null \
 	|| echo "warn: could not fetch $base; merged column may be stale" >&2 ;;
 esac
 git rev-parse --verify --quiet "$base^{commit}" >/dev/null 2>&1 || { echo "error: base ref not found: $base" >&2; exit 1; }
@@ -60,10 +64,10 @@ fi
 # neither can.
 prs=$(mktemp)
 if command -v origin >/dev/null 2>&1 \
-	&& raw=$(origin pr list --author "@me" --state all --limit 1000 \
+	&& raw=$(bounded 60 origin pr list --author "@me" --state all --limit 1000 \
 		--json number,status,headRef 2>/dev/null); then
 	printf '%s' "$raw" | jq '[.[] | {number, state: .status, head: .headRef}]' > "$prs" 2>/dev/null
-elif raw=$(gh pr list --author "@me" --state all --limit 1000 \
+elif raw=$(bounded 60 gh pr list --author "@me" --state all --limit 1000 \
 	--json number,state,headRefName 2>/dev/null); then
 	printf '%s' "$raw" | jq '[.[] | {number, state: (.state | ascii_downcase), head: .headRefName}]' > "$prs" 2>/dev/null
 fi

@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { type ChildProcess, execFile, type ExecFileException, spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -73,23 +73,34 @@ type ChildResult = {
   status: number | null;
   stdout: string;
   stderr: string;
-  error: ExecFileException | undefined;
+  error: Error | undefined;
 };
 
-const runChild = (file: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) =>
+// mise install downloads Java and TLC, and a stalled download would hang the
+// first run. The child leads its own process group (spawn honors detached;
+// execFile does not) so expiry kills the downloads it started too.
+const runChild = (
+  file: string,
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv },
+  timeoutMs: number,
+) =>
   new Promise<ChildResult>((resolve) => {
-    execFile(
-      file,
-      args,
-      { encoding: "utf8", maxBuffer: 1 << 30, ...options },
-      (error, stdout, stderr) =>
-        resolve({
-          status: error ? (typeof error.code === "number" ? error.code : null) : 0,
-          stdout,
-          stderr,
-          error: typeof error?.code === "string" ? error : undefined,
-        }),
-    );
+    const child = spawn(file, args, { ...options, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    let error: Error | undefined;
+    child.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
+    const timer = setTimeout(() => {
+      error = new Error(`${file} timed out after ${timeoutMs / 1000}s`);
+      if (child.pid) void killGroup(child.pid);
+    }, timeoutMs);
+    child.on("error", (e) => (error = e));
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve({ status: error ? null : code, stdout, stderr, error });
+    });
   });
 
 export const killGroup = (pid: number) =>
@@ -193,13 +204,16 @@ const runToFiles = (
 async function findTlc(cwd: string) {
   const { TLA2TOOLS, JAVA } = process.env;
   if (TLA2TOOLS) return { jar: TLA2TOOLS, java: JAVA || "java" };
-  const mise = (...args: string[]) =>
-    runChild("mise", args, { cwd, env: { ...process.env, MISE_CEILING_PATHS: cwd } });
+  const mise = (timeoutMs: number, ...args: string[]) =>
+    runChild("mise", args, { cwd, env: { ...process.env, MISE_CEILING_PATHS: cwd } }, timeoutMs);
   const where = () =>
-    Promise.all([mise("where", TLC_TOOL), mise("which", "java", "--tool", JAVA_TOOL)]);
+    Promise.all([
+      mise(60_000, "where", TLC_TOOL),
+      mise(60_000, "which", "java", "--tool", JAVA_TOOL),
+    ]);
   let found = await where();
   if (found.some((r) => r.status !== 0)) {
-    const r = await mise("install", JAVA_TOOL, TLC_TOOL);
+    const r = await mise(900_000, "install", JAVA_TOOL, TLC_TOOL);
     if (r.status !== 0)
       throw new Error(
         `Cannot find TLC: mise install failed: ${r.error?.message ?? r.stderr.trim()}\nOr set TLA2TOOLS to the path of tla2tools.jar, and JAVA to a java binary (Java 11 or later).`,
