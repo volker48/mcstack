@@ -32,7 +32,7 @@ Each reviewer and the synthesizer name a role line in the `~/.claude/mcstack-mod
 | Tooling | `reflect tooling` | `sonnet-xhigh` | `references/tooling-reviewer.md` |
 | Divergent | `reflect judgment, divergent, synthesizer` | `opus-xhigh` | `references/divergent-reviewer.md` |
 
-Pass each template verbatim, substituting the transcript path or digest where marked. Parallel reviewers share the scratchpad, so add one line to each prompt naming its own scratch subfolder (`reflect-judgment/`, `reflect-tooling/`, `reflect-divergent/`; the synthesizer gets `reflect-synth/`). Reviewers return findings in the `Agent` response body.
+Pass each template verbatim, substituting the transcript path or digest where marked. Parallel reviewers share the session scratchpad directory, so after each template append one line naming that reviewer's own subfolder of it by absolute path (`reflect-judgment/`, `reflect-tooling/`, `reflect-divergent/`; the synthesizer gets `reflect-synth/`). Reviewers return findings in the `Agent` response body.
 
 ## 3. Synthesize
 
