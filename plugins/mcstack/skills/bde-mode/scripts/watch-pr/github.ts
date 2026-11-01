@@ -30,9 +30,13 @@ export class ChecksUnavailable extends WatcherQueryError {
 const firstLine = (value: string): string =>
   value.trim().split(/\r?\n/, 1)[0]?.slice(0, 240) ?? "";
 // A gh call stalled on the network would otherwise hang the watcher forever.
-// Expiry reads as a failed command, which callers already retry.
+// Expiry returns exit -1, so each caller handles it as it handles any failed
+// command.
 const COMMAND_TIMEOUT_MS = 120_000;
-function run(argv: readonly [string, ...string[]]): Promise<CommandResult> {
+export function run(
+  argv: readonly [string, ...string[]],
+  timeoutMs = COMMAND_TIMEOUT_MS
+): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(argv[0], argv.slice(1), {
       stdio: ["ignore", "pipe", "pipe"],
@@ -41,7 +45,7 @@ function run(argv: readonly [string, ...string[]]): Promise<CommandResult> {
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill("SIGKILL");
-    }, COMMAND_TIMEOUT_MS);
+    }, timeoutMs);
     let stdout = "";
     let stderr = "";
     child.stdout.setEncoding("utf8");
@@ -60,7 +64,7 @@ function run(argv: readonly [string, ...string[]]): Promise<CommandResult> {
       clearTimeout(timer);
       resolve(
         timedOut
-          ? { code: -1, stdout, stderr: `${argv[0]} timed out after ${COMMAND_TIMEOUT_MS / 1000}s` }
+          ? { code: -1, stdout, stderr: `${argv[0]} timed out after ${timeoutMs / 1000}s` }
           : { code: code ?? -1, stdout, stderr },
       );
     });

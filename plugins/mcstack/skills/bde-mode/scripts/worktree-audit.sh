@@ -70,6 +70,8 @@ if command -v origin >/dev/null 2>&1 \
 elif raw=$(bounded 60 gh pr list --author "@me" --state all --limit 1000 \
 	--json number,state,headRefName 2>/dev/null); then
 	printf '%s' "$raw" | jq '[.[] | {number, state: (.state | ascii_downcase), head: .headRefName}]' > "$prs" 2>/dev/null
+else
+	echo "warn: could not list PRs with origin or gh; PR column shows -" >&2
 fi
 [ -s "$prs" ] || echo "[]" > "$prs"
 

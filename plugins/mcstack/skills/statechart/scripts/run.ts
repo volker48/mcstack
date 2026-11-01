@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { type ChildProcess, spawn } from "node:child_process";
+import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -76,9 +76,29 @@ type ChildResult = {
   error: Error | undefined;
 };
 
+// Kills pid and every process descended from it, found by parent pid in one
+// ps snapshot, parent first so it can't start more. A process group kill
+// would need the child to lead its own group, which would take it out of the
+// worker's group that Ctrl-C kills.
+const killTree = (pid: number) => {
+  const children = new Map<number, number[]>();
+  const table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 10_000 });
+  for (const line of table.split("\n")) {
+    const [p, parent] = line.trim().split(/\s+/).map(Number);
+    if (p && parent) children.set(parent, [...(children.get(parent) ?? []), p]);
+  }
+  const doomed = [pid];
+  for (let i = 0; i < doomed.length; i++) doomed.push(...(children.get(doomed[i]) ?? []));
+  for (const p of doomed)
+    try {
+      process.kill(p, "SIGKILL");
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ESRCH")) throw error;
+    }
+};
+
 // mise install downloads Java and TLC, and a stalled download would hang the
-// first run. The child leads its own process group (spawn honors detached;
-// execFile does not) so expiry kills the downloads it started too.
+// first run, so expiry kills mise and the downloads it started.
 const runChild = (
   file: string,
   args: string[],
@@ -86,7 +106,7 @@ const runChild = (
   timeoutMs: number,
 ) =>
   new Promise<ChildResult>((resolve) => {
-    const child = spawn(file, args, { ...options, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(file, args, { ...options, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     let error: Error | undefined;
@@ -94,7 +114,7 @@ const runChild = (
     child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
     const timer = setTimeout(() => {
       error = new Error(`${file} timed out after ${timeoutMs / 1000}s`);
-      if (child.pid) void killGroup(child.pid);
+      if (child.pid) killTree(child.pid);
     }, timeoutMs);
     child.on("error", (e) => (error = e));
     child.on("close", (code) => {
