@@ -4,8 +4,8 @@ A Claude Code port of [pstack](https://github.com/cursor/plugins/tree/main/pstac
 
 ## Source and license
 
-- Upstream: [`cursor/plugins`](https://github.com/cursor/plugins), directory `pstack/`, version `0.15.25`.
-- Vendored here as a git subtree at [`repos/cursor-plugins/pstack`](../../repos/cursor-plugins/pstack) (subtree commit `e5136d8`). Diff this plugin against that copy to see every change.
+- Upstream: [`cursor/plugins`](https://github.com/cursor/plugins), directory `pstack/`, version `0.15.36`.
+- Vendored here as a git subtree at [`repos/cursor-plugins/pstack`](../../repos/cursor-plugins/pstack) (subtree commit `ae5650f`). Diff this plugin against that copy to see every change.
 - MIT licensed. The original copyright notice is kept in [LICENSE](./LICENSE).
 
 This copy is meant to diverge. The skills will be reshaped to my own style over time, so do not expect it to track upstream.
@@ -45,6 +45,9 @@ The [guide](./docs/guide/README.md) walks through a first real task. It was writ
 | `create-skill` | `skill-creator` |
 | Custom Modes | start each task with `/bde-mode`, or point `CLAUDE.md` at it |
 | `.cursor/skills/` | `.claude/skills/` |
+| Project tracker and Project store | `~/.claude/mcstack/orchestrate/<project-slug>/notes.md` |
+| `<skill dir>` in script commands | `${CLAUDE_PLUGIN_ROOT}/skills/<name>` |
+| An embedded chat video | `SendUserFile`, or the file's path |
 | `is_background: true` agent frontmatter | `background: true` |
 
 Added from other sources (MIT, notices in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES)):
@@ -61,6 +64,8 @@ Not ported:
 Known gaps:
 
 - The `scripts/` under `bde-mode` are unchanged apart from the transcript path in `worktree-audit.sh`. They need [Bun](https://bun.sh).
+- `/statechart` needs Node 22.18+, Bun 1.1.5+, or Deno 2, plus [mise](https://mise.jdx.dev), which installs Java and TLC on the first run (network required). Its rendering step uses the `pele` npm package.
+- `/ketchup-video` needs a local way to render an mp4, such as ffmpeg, which the skill does not install.
 - `bde-agent` sets `background: true`, as upstream did, so it always runs in the background even when a caller passes `run_in_background: false`.
 - `watch-pr` still recognizes Cursor's Bugbot comments. That is GitHub-side behavior and still useful if Bugbot reviews your repos.
-- The orchestrate and autopilot playbooks assume large agent fleets. Claude Code runs them with flat fan-out from one coordinator, which is less proven than the Cursor setup they were tuned on.
+- The orchestrate and autopilot playbooks assume large agent fleets. Claude Code runs them with flat fan-out from one coordinator, and sub-coordinators as separate sessions, which is less proven than the Cursor setup they were tuned on.
