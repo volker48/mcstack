@@ -2,7 +2,7 @@
 
 Cursor plugin that connects agents to the [X API](https://docs.x.com) through X's official hosted [Model Context Protocol](https://modelcontextprotocol.io/) server at `https://api.x.com/mcp`.
 
-This plugin signs you in with OAuth as your own X account. It is no longer read-only: alongside searching and reading public X data, agents can manage your lists, bookmarks, blocks, and mutes, and call X Chat endpoints.
+This plugin signs you in with OAuth as your own X account. It is no longer read-only: alongside searching and reading public X data, agents can manage your lists, bookmarks, blocks, and mutes, call X Chat endpoints, and schedule X calls.
 
 ## Install
 
@@ -37,6 +37,8 @@ Or run `/add-plugin x` in chat.
           "bookmark.write",
           "dm.read",
           "dm.write",
+          "calls.read",
+          "calls.write",
           "media.write",
           "developer.billing.write",
           "developer.write",
@@ -56,11 +58,14 @@ Or run `/add-plugin x` in chat.
 | Search | Full-archive post search, user search, news search |
 | Users | Look up users by id or handle; read a user's posts, timeline, and mentions |
 | News & trends | Get news stories, get trends for a location (WOEID) |
-| Follows, likes & Spaces | Read your follows, likes, and Spaces |
-| Lists | Read and manage your lists |
+| Follows & likes | Read your follows and likes |
+| Spaces | Search Spaces (live or scheduled), look them up by id or host, and read posts shared in a Space |
+| Communities | Search communities and read a community's details |
+| Lists | Read lists, their posts, members, and followers, and a user's owned, followed, pinned, and member lists; create, edit, follow, pin, and manage members of your lists |
 | Bookmarks | Read and manage your bookmarks |
 | Blocks & mutes | Read your blocks and mutes; add or remove blocks |
 | Chat | List conversations, fetch events, send messages, typing, and read receipts; list, open, and accept message requests |
+| Calls | List and open scheduled X calls; schedule, update, or cancel one; RSVP to an invitation |
 | Developer account | Read your X developer account settings and credit balance |
 
 Posting is not included: the plugin does not request the `tweet.write` scope, so agents cannot publish posts as you.
@@ -69,11 +74,13 @@ Posting is not included: the plugin does not request the `tweet.write` scope, so
 
 No token to paste — the plugin ships with X's OAuth client ID and requests the scopes above. On first use, Cursor opens a browser window where you sign in to X and approve access. The `offline.access` scope lets Cursor refresh the session automatically, so you only sign in once.
 
+X tools are included in Grok Bot at no cost.
+
 Requests run in your user context, so they count against your account's rate limits. You can revoke access at any time from your X account's connected apps settings.
 
 ## Scopes requested
 
-`tweet.read`, `users.read`, `follows.read`, `space.read`, `mute.read`, `like.read`, `list.read`, `list.write`, `block.read`, `block.write`, `bookmark.read`, `bookmark.write`, `dm.read`, `dm.write`, `media.write`, `developer.billing.write`, `developer.write`, `offline.access`
+`tweet.read`, `users.read`, `follows.read`, `space.read`, `mute.read`, `like.read`, `list.read`, `list.write`, `block.read`, `block.write`, `bookmark.read`, `bookmark.write`, `dm.read`, `dm.write`, `calls.read`, `calls.write`, `media.write`, `developer.billing.write`, `developer.write`, `offline.access`
 
 ## X documentation search
 
