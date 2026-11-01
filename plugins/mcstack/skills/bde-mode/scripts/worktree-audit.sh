@@ -42,13 +42,15 @@ fi
 # the audit. macOS has no timeout(1). Expiry kills the command and every
 # descendant, found by parent pid with ps, since one left holding stdout keeps
 # $(...) waiting. The command stays in the terminal's process group, so Ctrl-C
-# and credential prompts on /dev/tty reach it. Exits 124 on expiry, like
-# timeout(1).
+# and credential prompts on /dev/tty reach it. Like timeout(1), it passes INT,
+# TERM and HUP sent to it alone on to the command and keeps the deadline, and
+# exits 124 on expiry.
 bounded() {
 	perl -e '
 		my $secs = shift;
 		my $pid = fork() // die "fork: $!\n";
 		if (!$pid) { exec @ARGV or die "exec $ARGV[0]: $!\n" }
+		for my $sig (qw(INT TERM HUP)) { $SIG{$sig} = sub { kill $sig => $pid } }
 		$SIG{ALRM} = sub {
 			my %kids;
 			for (`ps -A -o pid=,ppid=`) { my ($p, $parent) = split; push @{ $kids{$parent} }, $p }
@@ -58,7 +60,7 @@ bounded() {
 			exit 124;
 		};
 		alarm $secs;
-		waitpid $pid, 0;
+		1 while waitpid($pid, 0) == -1 && $!{EINTR};
 		exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
 	' "$@"
 }
