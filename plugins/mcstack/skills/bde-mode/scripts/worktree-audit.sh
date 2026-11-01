@@ -38,11 +38,38 @@ if [ -z "$base" ]; then
 	echo "warn: no -b given; MERGED checks against $base" >&2
 fi
 
+# Network calls get a deadline, since a stalled fetch or PR list would hang
+# the audit. macOS has no timeout(1). Expiry kills the command and every
+# descendant, found by parent pid with ps, since one left holding stdout keeps
+# $(...) waiting. The command stays in the terminal's process group, so Ctrl-C
+# and credential prompts on /dev/tty reach it. Like timeout(1), it passes INT,
+# TERM and HUP sent to it alone on to the command and keeps the deadline, and
+# exits 124 on expiry.
+bounded() {
+	perl -e '
+		my $secs = shift;
+		my $pid = fork() // die "fork: $!\n";
+		if (!$pid) { exec @ARGV or die "exec $ARGV[0]: $!\n" }
+		for my $sig (qw(INT TERM HUP)) { $SIG{$sig} = sub { kill $sig => $pid } }
+		$SIG{ALRM} = sub {
+			my %kids;
+			for (`ps -A -o pid=,ppid=`) { my ($p, $parent) = split; push @{ $kids{$parent} }, $p }
+			my @doomed = ($pid);
+			for (my $i = 0; $i < @doomed; $i++) { push @doomed, @{ $kids{ $doomed[$i] } || [] } }
+			kill KILL => @doomed;
+			exit 124;
+		};
+		alarm $secs;
+		1 while waitpid($pid, 0) == -1 && $!{EINTR};
+		exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
+	' "$@"
+}
+
 # The base drives the merge check. The fetch is best-effort (stale is fine for
 # a first pass) and runs before the check, since -b may name a branch not
 # fetched yet. The explicit refspec creates it even in a single-branch clone.
 case "$base" in
-origin/*) git fetch origin "+refs/heads/${base#origin/}:refs/remotes/$base" --quiet 2>/dev/null \
+origin/*) bounded 60 git fetch origin "+refs/heads/${base#origin/}:refs/remotes/$base" --quiet 2>/dev/null \
 	|| echo "warn: could not fetch $base; merged column may be stale" >&2 ;;
 esac
 git rev-parse --verify --quiet "$base^{commit}" >/dev/null 2>&1 || { echo "error: base ref not found: $base" >&2; exit 1; }
@@ -60,12 +87,14 @@ fi
 # neither can.
 prs=$(mktemp)
 if command -v origin >/dev/null 2>&1 \
-	&& raw=$(origin pr list --author "@me" --state all --limit 1000 \
+	&& raw=$(bounded 60 origin pr list --author "@me" --state all --limit 1000 \
 		--json number,status,headRef 2>/dev/null); then
 	printf '%s' "$raw" | jq '[.[] | {number, state: .status, head: .headRef}]' > "$prs" 2>/dev/null
-elif raw=$(gh pr list --author "@me" --state all --limit 1000 \
+elif raw=$(bounded 60 gh pr list --author "@me" --state all --limit 1000 \
 	--json number,state,headRefName 2>/dev/null); then
 	printf '%s' "$raw" | jq '[.[] | {number, state: (.state | ascii_downcase), head: .headRefName}]' > "$prs" 2>/dev/null
+else
+	echo "warn: could not list PRs with origin or gh; PR column shows -" >&2
 fi
 [ -s "$prs" ] || echo "[]" > "$prs"
 
@@ -112,8 +141,8 @@ git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt;
 	# followed by "/" or a quote so glint-482 does not match glint-482-r37.
 	last="-"; last_ts=0
 	if [ -d "$transcripts" ]; then
-		f=$(rg -l -e "${wt}/" -e "${wt}\"" "$transcripts" 2>/dev/null \
-			| xargs stat "${stat_fmt[@]}" 2>/dev/null | sort -rn | head -1)
+		f=$(rg --null -l -e "${wt}/" -e "${wt}\"" "$transcripts" 2>/dev/null \
+			| xargs -0 stat "${stat_fmt[@]}" 2>/dev/null | sort -rn | head -1)
 		if [ -n "$f" ]; then last_ts=$(echo "$f" | awk '{print $1}')
 			last=$(fmt_day "$last_ts" 2>/dev/null); fi
 	fi

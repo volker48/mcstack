@@ -15,6 +15,7 @@ import {
   resolveChecks,
   resolveContext,
   resolveReviewThreads,
+  run,
 } from "./github.ts";
 import {
   fakeReader,
@@ -495,4 +496,19 @@ printf '%s\\n' '[{"number":42,"headRefName":"feature","baseRefName":"main","isCr
     }
   });
 
+});
+
+describe("command deadline", () => {
+  it("answers at the deadline even while a descendant holds the pipes", async () => {
+    const started = Date.now();
+    const result = await run(["sh", "-c", "sleep 5 & sleep 5"], 200);
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(result.code).toBe(-1);
+    expect(result.stderr).toBe("sh timed out after 0.2s");
+  });
+
+  it("returns a command that finishes in time unchanged", async () => {
+    const result = await run(["sh", "-c", "echo out; echo err >&2; exit 3"], 5000);
+    expect(result).toEqual({ code: 3, stdout: "out\n", stderr: "err\n" });
+  });
 });

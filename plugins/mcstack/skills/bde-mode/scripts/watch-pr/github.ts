@@ -29,11 +29,33 @@ export class ChecksUnavailable extends WatcherQueryError {
 }
 const firstLine = (value: string): string =>
   value.trim().split(/\r?\n/, 1)[0]?.slice(0, 240) ?? "";
-function run(argv: readonly [string, ...string[]]): Promise<CommandResult> {
+// A gh call stalled on the network would otherwise hang the watcher forever.
+// Expiry returns exit -1, so each caller handles it as it handles any failed
+// command. It answers at expiry rather than on close, which waits for every
+// process holding the pipes, and drops its pipe ends so a leftover descendant
+// gets EPIPE instead of keeping the watcher alive.
+const COMMAND_TIMEOUT_MS = 120_000;
+export function run(
+  argv: readonly [string, ...string[]],
+  timeoutMs = COMMAND_TIMEOUT_MS
+): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(argv[0], argv.slice(1), {
       stdio: ["ignore", "pipe", "pipe"],
     });
+    let settled = false;
+    const finish = (result: CommandResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(result);
+    };
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      child.stdout.destroy();
+      child.stderr.destroy();
+      finish({ code: -1, stdout, stderr: `${argv[0]} timed out after ${timeoutMs / 1000}s` });
+    }, timeoutMs);
     let stdout = "";
     let stderr = "";
     child.stdout.setEncoding("utf8");
@@ -44,8 +66,13 @@ function run(argv: readonly [string, ...string[]]): Promise<CommandResult> {
     child.stderr.on("data", (chunk: string) => {
       stderr += chunk;
     });
-    child.on("error", reject);
-    child.on("close", (code) => resolve({ code: code ?? -1, stdout, stderr }));
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", (code) => finish({ code: code ?? -1, stdout, stderr }));
   });
 }
 function parseJson(text: string, label: string): unknown {

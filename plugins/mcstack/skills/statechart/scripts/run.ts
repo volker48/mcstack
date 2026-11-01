@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { type ChildProcess, execFile, type ExecFileException, spawn } from "node:child_process";
+import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -73,23 +73,72 @@ type ChildResult = {
   status: number | null;
   stdout: string;
   stderr: string;
-  error: ExecFileException | undefined;
+  error: Error | undefined;
 };
 
-const runChild = (file: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) =>
+// Kills pid and every process descended from it, found by parent pid in one
+// ps snapshot, parent first so it can't start more. A process group kill
+// would need the child to lead its own group, which would take it out of the
+// worker's group that Ctrl-C kills. Without ps only pid dies here; the rest
+// stay in the worker's group, which statechart kills when the worker exits.
+const killTree = (pid: number) => {
+  const children = new Map<number, number[]>();
+  let table = "";
+  try {
+    table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 2_000 });
+  } catch {}
+  for (const line of table.split("\n")) {
+    const [p, parent] = line.trim().split(/\s+/).map(Number);
+    if (p && parent) children.set(parent, [...(children.get(parent) ?? []), p]);
+  }
+  const doomed = [pid];
+  for (let i = 0; i < doomed.length; i++) doomed.push(...(children.get(doomed[i]) ?? []));
+  for (const p of doomed)
+    try {
+      process.kill(p, "SIGKILL");
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ESRCH")) throw error;
+    }
+};
+
+// mise install downloads Java and TLC, and a stalled download would hang the
+// first run, so expiry kills mise and the downloads it started. It answers at
+// expiry rather than on close, which waits for every process holding the pipes.
+const runChild = (
+  file: string,
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv },
+  timeoutMs: number,
+) =>
   new Promise<ChildResult>((resolve) => {
-    execFile(
-      file,
-      args,
-      { encoding: "utf8", maxBuffer: 1 << 30, ...options },
-      (error, stdout, stderr) =>
-        resolve({
-          status: error ? (typeof error.code === "number" ? error.code : null) : 0,
-          stdout,
-          stderr,
-          error: typeof error?.code === "string" ? error : undefined,
-        }),
-    );
+    const child = spawn(file, args, { ...options, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    let error: Error | undefined;
+    let settled = false;
+    const finish = (status: number | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({ status, stdout, stderr, error });
+    };
+    child.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
+    const timer = setTimeout(() => {
+      error = new Error(`${file} timed out after ${timeoutMs / 1000}s`);
+      try {
+        if (child.pid) killTree(child.pid);
+      } catch (killError) {
+        error = new Error(`${error.message}, and killing it failed: ${messageOf(killError)}`, {
+          cause: killError,
+        });
+      }
+      child.stdout.destroy();
+      child.stderr.destroy();
+      finish(null);
+    }, timeoutMs);
+    child.on("error", (e) => (error = e));
+    child.on("close", (code) => finish(error ? null : code));
   });
 
 export const killGroup = (pid: number) =>
@@ -193,13 +242,16 @@ const runToFiles = (
 async function findTlc(cwd: string) {
   const { TLA2TOOLS, JAVA } = process.env;
   if (TLA2TOOLS) return { jar: TLA2TOOLS, java: JAVA || "java" };
-  const mise = (...args: string[]) =>
-    runChild("mise", args, { cwd, env: { ...process.env, MISE_CEILING_PATHS: cwd } });
+  const mise = (timeoutMs: number, ...args: string[]) =>
+    runChild("mise", args, { cwd, env: { ...process.env, MISE_CEILING_PATHS: cwd } }, timeoutMs);
   const where = () =>
-    Promise.all([mise("where", TLC_TOOL), mise("which", "java", "--tool", JAVA_TOOL)]);
+    Promise.all([
+      mise(60_000, "where", TLC_TOOL),
+      mise(60_000, "which", "java", "--tool", JAVA_TOOL),
+    ]);
   let found = await where();
   if (found.some((r) => r.status !== 0)) {
-    const r = await mise("install", JAVA_TOOL, TLC_TOOL);
+    const r = await mise(900_000, "install", JAVA_TOOL, TLC_TOOL);
     if (r.status !== 0)
       throw new Error(
         `Cannot find TLC: mise install failed: ${r.error?.message ?? r.stderr.trim()}\nOr set TLA2TOOLS to the path of tla2tools.jar, and JAVA to a java binary (Java 11 or later).`,

@@ -32,10 +32,14 @@ export function ensureDependenciesInstalled(): void {
     return;
   }
 
+  // A registry stall would otherwise hang the first run with no error.
   const result = Bun.spawnSync(
     [process.execPath, "install", "--frozen-lockfile"],
-    { cwd: scriptsDirectory }
+    { cwd: scriptsDirectory, timeout: 300_000, killSignal: "SIGKILL" }
   );
+  if (result.exitedDueToTimeout) {
+    throw new Error("bun install --frozen-lockfile timed out after 300s");
+  }
   if (result.exitCode !== 0) {
     process.stdout.write(result.stdout);
     process.stderr.write(result.stderr);
