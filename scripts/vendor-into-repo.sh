@@ -10,8 +10,9 @@
 #
 # The copy comes from this checkout's HEAD, so uncommitted edits are left out
 # and the SHA written to .claude/mcstack/README.md names exactly what was
-# copied. Rerun it to update. Skills listed in .claude/mcstack/MANIFEST are
-# replaced or removed; every other skill in .claude/skills is left alone.
+# copied. Rerun it to update. Paths listed in .claude/mcstack/MANIFEST are
+# replaced or removed. It stops without changing anything if an incoming skill
+# or agent would replace a path the MANIFEST doesn't list.
 set -euo pipefail
 
 [ $# -eq 1 ] || {
@@ -40,13 +41,42 @@ for d in "$src"/skills/*/; do
 	[[ " ${skip_skills[*]} " == *" $n "* ]] || skills+=("$n")
 done
 
-mkdir -p "$dest/skills" "$dest/agents" "$dest/mcstack"
+# MANIFEST lists every path under .claude/ that this script owns. Anything
+# else at an incoming path belongs to the repository, so stop before touching
+# anything rather than delete it.
+owned_now=()
+for n in "${skills[@]}"; do owned_now+=("skills/$n"); done
+for a in "${agents[@]}"; do owned_now+=("agents/$a.md"); done
+
 manifest=$dest/mcstack/MANIFEST
+owned_before=()
 if [ -f "$manifest" ]; then
-	while read -r n; do
-		[[ " ${skills[*]} " == *" $n "* ]] || rm -rf "${dest:?}/skills/$n"
+	while IFS= read -r p; do
+		[[ "$p" =~ ^(skills/[A-Za-z0-9._-]+|agents/[A-Za-z0-9._-]+\.md)$ && "$p" != */.* ]] || {
+			echo "error: unexpected MANIFEST entry: $p" >&2
+			exit 1
+		}
+		owned_before+=("$p")
 	done <"$manifest"
 fi
+
+collisions=()
+for p in "${owned_now[@]}"; do
+	if [ -e "$dest/$p" ] || [ -L "$dest/$p" ]; then
+		[[ " ${owned_before[*]-} " == *" $p "* ]] || collisions+=("$p")
+	fi
+done
+if [ ${#collisions[@]} -gt 0 ]; then
+	echo "error: these paths in $dest are not in its mcstack MANIFEST, so they may belong to the repository:" >&2
+	printf '  %s\n' "${collisions[@]}" >&2
+	echo "Remove or rename each one, or add it to $manifest if it is an earlier copy of mcstack." >&2
+	exit 1
+fi
+
+mkdir -p "$dest/skills" "$dest/agents" "$dest/mcstack"
+for p in ${owned_before[@]+"${owned_before[@]}"}; do
+	[[ " ${owned_now[*]} " == *" $p "* ]] || rm -rf "${dest:?}/$p"
+done
 
 for n in "${skills[@]}"; do
 	rm -rf "${dest:?}/skills/$n"
@@ -56,7 +86,7 @@ for a in "${agents[@]}"; do
 	cp "$src/agents/$a.md" "$dest/agents/$a.md"
 done
 cp "$src/LICENSE" "$src/THIRD_PARTY_NOTICES" "$dest/mcstack/"
-printf '%s\n' "${skills[@]}" >"$manifest"
+printf '%s\n' "${owned_now[@]}" >"$manifest"
 
 # A project skill is not a plugin: no ${CLAUDE_PLUGIN_ROOT}, no plugin prefix
 # on agent names, and no plugin README or docs beside the skills. The specific
@@ -104,7 +134,7 @@ Cloud sessions load a repository's \`.claude/skills\` and \`.claude/agents\`, bu
 they don't install plugins the repository enables in \`.claude/settings.json\`.
 This copy is how cloud agents get mcstack.
 
-- Skills: every directory listed in \`MANIFEST\`. Other skills in
+- Skills and agents: every path listed in \`MANIFEST\`. Other skills in
   \`.claude/skills\` belong to this repository and the script leaves them alone.
 - Agents: ${agent_list%, }.
 - Not copied: ${skip_list}(it writes \`~/.claude/mcstack-models.md\`;
