@@ -499,10 +499,10 @@ printf '%s\\n' '[{"number":42,"headRefName":"feature","baseRefName":"main","isCr
 });
 
 describe("command deadline", () => {
-  it("kills a stalled command and reports the timeout as a failed exit", async () => {
+  it("answers at the deadline even while a descendant holds the pipes", async () => {
     const started = Date.now();
-    const result = await run(["sh", "-c", "sleep 30"], 200);
-    expect(Date.now() - started).toBeLessThan(5000);
+    const result = await run(["sh", "-c", "sleep 5 & sleep 5"], 200);
+    expect(Date.now() - started).toBeLessThan(2000);
     expect(result.code).toBe(-1);
     expect(result.stderr).toBe("sh timed out after 0.2s");
   });

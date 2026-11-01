@@ -79,10 +79,14 @@ type ChildResult = {
 // Kills pid and every process descended from it, found by parent pid in one
 // ps snapshot, parent first so it can't start more. A process group kill
 // would need the child to lead its own group, which would take it out of the
-// worker's group that Ctrl-C kills.
+// worker's group that Ctrl-C kills. Without ps only pid dies here; the rest
+// stay in the worker's group, which statechart kills when the worker exits.
 const killTree = (pid: number) => {
   const children = new Map<number, number[]>();
-  const table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 10_000 });
+  let table = "";
+  try {
+    table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 10_000 });
+  } catch {}
   for (const line of table.split("\n")) {
     const [p, parent] = line.trim().split(/\s+/).map(Number);
     if (p && parent) children.set(parent, [...(children.get(parent) ?? []), p]);
@@ -98,7 +102,8 @@ const killTree = (pid: number) => {
 };
 
 // mise install downloads Java and TLC, and a stalled download would hang the
-// first run, so expiry kills mise and the downloads it started.
+// first run, so expiry kills mise and the downloads it started. It answers at
+// expiry rather than on close, which waits for every process holding the pipes.
 const runChild = (
   file: string,
   args: string[],
@@ -110,17 +115,30 @@ const runChild = (
     let stdout = "";
     let stderr = "";
     let error: Error | undefined;
+    let settled = false;
+    const finish = (status: number | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({ status, stdout, stderr, error });
+    };
     child.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
     child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
     const timer = setTimeout(() => {
       error = new Error(`${file} timed out after ${timeoutMs / 1000}s`);
-      if (child.pid) killTree(child.pid);
+      try {
+        if (child.pid) killTree(child.pid);
+      } catch (killError) {
+        error = new Error(`${error.message}, and killing it failed: ${messageOf(killError)}`, {
+          cause: killError,
+        });
+      }
+      child.stdout.destroy();
+      child.stderr.destroy();
+      finish(null);
     }, timeoutMs);
     child.on("error", (e) => (error = e));
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      resolve({ status: error ? null : code, stdout, stderr, error });
-    });
+    child.on("close", (code) => finish(error ? null : code));
   });
 
 export const killGroup = (pid: number) =>

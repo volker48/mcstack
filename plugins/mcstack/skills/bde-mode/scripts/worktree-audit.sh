@@ -39,8 +39,23 @@ if [ -z "$base" ]; then
 fi
 
 # Network calls get a deadline, since a stalled fetch or PR list would hang
-# the audit. macOS has no timeout(1); perl's alarm survives the exec.
-bounded() { perl -e 'alarm shift; exec @ARGV or die "exec $ARGV[0]: $!\n"' "$@"; }
+# the audit. macOS has no timeout(1). The command runs in its own process
+# group so expiry kills its descendants too; otherwise one holding stdout keeps
+# $(...) waiting. A group outside the terminal's misses Ctrl-C, so INT, TERM
+# and HUP are passed on to it. Exits 124 on expiry, like timeout(1).
+bounded() {
+	perl -e '
+		my $secs = shift;
+		my $pid = fork() // die "fork: $!\n";
+		if (!$pid) { setpgrp(0, 0); exec @ARGV or die "exec $ARGV[0]: $!\n" }
+		my %code = (INT => 130, TERM => 143, HUP => 129);
+		for my $sig (keys %code) { $SIG{$sig} = sub { kill KILL => -$pid; exit $code{$sig} } }
+		$SIG{ALRM} = sub { kill KILL => -$pid; exit 124 };
+		alarm $secs;
+		waitpid $pid, 0;
+		exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
+	' "$@"
+}
 
 # The base drives the merge check. The fetch is best-effort (stale is fine for
 # a first pass) and runs before the check, since -b may name a branch not

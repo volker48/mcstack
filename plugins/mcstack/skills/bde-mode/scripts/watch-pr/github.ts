@@ -31,7 +31,9 @@ const firstLine = (value: string): string =>
   value.trim().split(/\r?\n/, 1)[0]?.slice(0, 240) ?? "";
 // A gh call stalled on the network would otherwise hang the watcher forever.
 // Expiry returns exit -1, so each caller handles it as it handles any failed
-// command.
+// command. It answers at expiry rather than on close, which waits for every
+// process holding the pipes, and drops its pipe ends so a leftover descendant
+// gets EPIPE instead of keeping the watcher alive.
 const COMMAND_TIMEOUT_MS = 120_000;
 export function run(
   argv: readonly [string, ...string[]],
@@ -41,10 +43,18 @@ export function run(
     const child = spawn(argv[0], argv.slice(1), {
       stdio: ["ignore", "pipe", "pipe"],
     });
-    let timedOut = false;
+    let settled = false;
+    const finish = (result: CommandResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(result);
+    };
     const timer = setTimeout(() => {
-      timedOut = true;
       child.kill("SIGKILL");
+      child.stdout.destroy();
+      child.stderr.destroy();
+      finish({ code: -1, stdout, stderr: `${argv[0]} timed out after ${timeoutMs / 1000}s` });
     }, timeoutMs);
     let stdout = "";
     let stderr = "";
@@ -57,17 +67,12 @@ export function run(
       stderr += chunk;
     });
     child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
       reject(error);
     });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      resolve(
-        timedOut
-          ? { code: -1, stdout, stderr: `${argv[0]} timed out after ${timeoutMs / 1000}s` }
-          : { code: code ?? -1, stdout, stderr },
-      );
-    });
+    child.on("close", (code) => finish({ code: code ?? -1, stdout, stderr }));
   });
 }
 function parseJson(text: string, label: string): unknown {
