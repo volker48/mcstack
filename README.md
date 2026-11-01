@@ -58,7 +58,7 @@ claude plugin marketplace update mcstack
 
 ## Cloud sessions
 
-Cloud sessions don't install plugins that a repository enables in its `.claude/settings.json`, but they do load the repository's `.claude/skills` and `.claude/agents`. To give cloud agents mcstack in a repository, commit a copy there:
+Cloud sessions don't install plugins that a repository enables in its `.claude/settings.json`, but a cloud session on a repository does load its `.claude/skills` and `.claude/agents`. Cloud threads in a Claude project load neither. To give the other cloud sessions mcstack, commit a copy to the repository:
 
 ```bash
 scripts/vendor-into-repo.sh /path/to/repo
