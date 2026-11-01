@@ -85,7 +85,7 @@ const killTree = (pid: number) => {
   const children = new Map<number, number[]>();
   let table = "";
   try {
-    table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 10_000 });
+    table = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 2_000 });
   } catch {}
   for (const line of table.split("\n")) {
     const [p, parent] = line.trim().split(/\s+/).map(Number);

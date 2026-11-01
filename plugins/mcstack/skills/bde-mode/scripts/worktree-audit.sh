@@ -39,18 +39,24 @@ if [ -z "$base" ]; then
 fi
 
 # Network calls get a deadline, since a stalled fetch or PR list would hang
-# the audit. macOS has no timeout(1). The command runs in its own process
-# group so expiry kills its descendants too; otherwise one holding stdout keeps
-# $(...) waiting. A group outside the terminal's misses Ctrl-C, so INT, TERM
-# and HUP are passed on to it. Exits 124 on expiry, like timeout(1).
+# the audit. macOS has no timeout(1). Expiry kills the command and every
+# descendant, found by parent pid with ps, since one left holding stdout keeps
+# $(...) waiting. The command stays in the terminal's process group, so Ctrl-C
+# and credential prompts on /dev/tty reach it. Exits 124 on expiry, like
+# timeout(1).
 bounded() {
 	perl -e '
 		my $secs = shift;
 		my $pid = fork() // die "fork: $!\n";
-		if (!$pid) { setpgrp(0, 0); exec @ARGV or die "exec $ARGV[0]: $!\n" }
-		my %code = (INT => 130, TERM => 143, HUP => 129);
-		for my $sig (keys %code) { $SIG{$sig} = sub { kill KILL => -$pid; exit $code{$sig} } }
-		$SIG{ALRM} = sub { kill KILL => -$pid; exit 124 };
+		if (!$pid) { exec @ARGV or die "exec $ARGV[0]: $!\n" }
+		$SIG{ALRM} = sub {
+			my %kids;
+			for (`ps -A -o pid=,ppid=`) { my ($p, $parent) = split; push @{ $kids{$parent} }, $p }
+			my @doomed = ($pid);
+			for (my $i = 0; $i < @doomed; $i++) { push @doomed, @{ $kids{ $doomed[$i] } || [] } }
+			kill KILL => @doomed;
+			exit 124;
+		};
 		alarm $secs;
 		waitpid $pid, 0;
 		exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
