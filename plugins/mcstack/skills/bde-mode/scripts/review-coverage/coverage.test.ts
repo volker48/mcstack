@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { type CliRuntime, main } from "./cli.ts";
 import { coverage, parsePullRequest, render, type Sha } from "./coverage.ts";
 
-// `gh pr view --json headRefOid,reviews,comments,statusCheckRollup` output. mcstack-5 is a snapshot of
+// `gh pr view --json url,headRefOid,reviews,comments,statusCheckRollup` output. mcstack-5 is a snapshot of
 // that public PR. The free-plan ones are synthetic, because the PRs they stand for are private: they
 // keep the bots' markup from those PRs and replace the content and commits.
 function fixture(name: string): unknown {
@@ -18,6 +18,7 @@ const B = "b".repeat(40) as Sha;
 
 function pr(overrides: Record<string, unknown> = {}): unknown {
   return {
+    url: "https://github.com/owner/repo/pull/5",
     headRefOid: B,
     reviews: [],
     comments: [],
@@ -312,7 +313,7 @@ describe("main", () => {
       "--repo",
       "octo/repo",
       "--json",
-      "headRefOid,reviews,comments,statusCheckRollup",
+      "url,headRefOid,reviews,comments,statusCheckRollup",
     ]);
     expect(out.join("")).toContain("MISSED the head");
   });
@@ -335,20 +336,35 @@ describe("main", () => {
     );
     await main(["150"], rt);
     expect(args[1]).toContain("id=IC_free-plan-limited-1");
+    expect(args[1]).toContain("github.com");
     expect(out.join("")).toContain(
       "next review available at 2026-11-01T18:07:30Z"
     );
   });
 
-  it("exits 2 when the notice's edit time cannot be read", async () => {
+  it("looks the notice up on the PR's own host", async () => {
+    const { runtime: rt, args } = runtime(
+      JSON.stringify({
+        ...(fixture("free-plan-limited") as object),
+        url: "https://ghe.example/octo/repo/pull/150",
+      })
+    );
+    await main(["https://ghe.example/octo/repo/pull/150"], rt);
+    const at = args[1]!.indexOf("--hostname");
+    expect(args[1]![at + 1]).toBe("ghe.example");
+  });
+
+  it("keeps the report and the delay when the notice's edit time cannot be read", async () => {
     const { runtime: rt, out } = runtime(
       JSON.stringify(fixture("free-plan-limited")),
       JSON.stringify({ data: { node: null } })
     );
-    expect(await main(["150"], rt)).toBe(2);
-    expect(out.join("")).toBe(
-      "review-coverage: comment IC_free-plan-limited-1 not found\n"
+    expect(await main(["150"], rt)).toBe(1);
+    const text = out.join("");
+    expect(text).toContain(
+      "review-coverage: printing coderabbitai's next review as a delay: comment IC_free-plan-limited-1 not found\n"
     );
+    expect(text).toContain("next review available in 57 minutes");
   });
 
   it("exits 0 when only a summary-only bot missed the head", async () => {
