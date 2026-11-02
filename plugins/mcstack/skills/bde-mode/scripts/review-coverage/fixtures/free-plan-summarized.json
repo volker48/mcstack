@@ -1,0 +1,34 @@
+{
+  "headRefOid": "e0996a37c13d44c3b06074939d43fa3759bd32c1",
+  "reviews": [],
+  "comments": [
+    {
+      "author": {
+        "login": "coderabbitai"
+      },
+      "body": "<!-- coderabbit-ai-generated:v1 -->\n\n<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n\n<!-- recent_review_start -->\n<!-- review_info_content -->\n- **Review profile**: CHILL\n- **Plan**: Free\n<details>\n<summary><strong>Commits</strong></summary>\n\nReviewing files that changed from the base of the PR and between 1405df66cbe219b0bf6355bc3d60361a8376b6b4 and e0996a37c13d44c3b06074939d43fa3759bd32c1.\n\n</details>\n<!-- recent_review_end -->\n<!-- walkthrough_start -->\n## Walkthrough\n\nSynthetic fixture: the walkthrough is left out.\n<!-- walkthrough_end -->\n<!-- tips_start -->\n> [!NOTE]\n> Your organization is on the Free plan. CodeRabbit will generate a high-level summary and a walkthrough for each pull request. For a comprehensive line-by-line review, please upgrade your subscription to CodeRabbit Essentials.\n<!-- tips_end -->",
+      "createdAt": "2026-11-01T16:08:09Z"
+    },
+    {
+      "author": {
+        "login": "chatgpt-codex-connector"
+      },
+      "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"e0996a37c13d44c3b06074939d43fa3759bd32c1\",\"has_any_findings\":false,\"has_unresolved_findings\":false,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n## Codex Review Summary\n",
+      "createdAt": "2026-11-01T16:08:09Z"
+    }
+  ],
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "name": "Checks",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS"
+    },
+    {
+      "__typename": "CheckRun",
+      "name": "CodeRabbit",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS"
+    }
+  ]
+}
