@@ -20,6 +20,7 @@ interface Review {
 }
 
 interface Comment {
+  readonly id: string;
   readonly login: string;
   readonly body: string;
 }
@@ -50,6 +51,23 @@ export interface BotCoverage {
   // The bot's plan only summarizes a PR, so its records name commits it summarized and found
   // nothing in only because it never looked for findings.
   readonly summaryOnly: boolean;
+  // Findings the bot put only in a review body, where no thread records them.
+  readonly bodyFindings: readonly BodyFindings[];
+  // When the bot said it would review again, counted from the comment that said so.
+  readonly nextReview: NextReview | null;
+}
+
+export interface BodyFindings {
+  readonly commit: Sha;
+  readonly kind: string;
+  readonly count: number;
+}
+
+export interface NextReview {
+  readonly comment: string;
+  // Null when the bot's wording held no duration this script can read.
+  readonly minutes: number | null;
+  readonly text: string;
 }
 
 export interface Report {
@@ -112,6 +130,7 @@ export function parsePullRequest(json: unknown): PullRequest {
     comments: array(pr.comments, "comments").map((raw, i) => {
       const comment = object(raw, `comments[${i}]`);
       return {
+        id: string(comment.id, `comments[${i}].id`),
         login: login(comment.author, `comments[${i}].author`),
         body: string(comment.body, `comments[${i}].body`),
       };
@@ -151,6 +170,30 @@ interface Facts {
   readonly reviewed: Sha[];
   readonly notes: string[];
   readonly summaryOnly?: boolean;
+  readonly nextReview?: Omit<NextReview, "comment">;
+}
+
+function minutes(text: string): number | null {
+  let total = 0;
+  let found = false;
+  for (const match of text.matchAll(/(\d+)\s*(hour|minute)s?/g)) {
+    total += Number(match[1]) * (match[2] === "hour" ? 60 : 1);
+    found = true;
+  }
+  return found ? total : null;
+}
+
+// CodeRabbit lists findings it cannot anchor to a diff line, and its nitpicks, only in the review
+// body, so they create no thread and nothing that reads threads sees them.
+function codeRabbitBodyFindings(
+  body: string
+): { kind: string; count: number }[] {
+  return [
+    ...body.matchAll(/(Outside diff range|Nitpick) comments \((\d+)\)/g),
+  ].map((match) => ({
+    kind: match[1] === "Nitpick" ? "nitpick" : "outside-diff",
+    count: Number(match[2]),
+  }));
 }
 
 // CodeRabbit edits one summary comment in place. Its recent_review section names the range of
@@ -173,7 +216,13 @@ function codeRabbitComment(body: string): Facts {
     "<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->",
     "<!-- end of auto-generated comment: rate limited by coderabbit.ai -->"
   );
+  let nextReview: Facts["nextReview"];
   if (limited !== null) {
+    const available = limited.match(
+      /Next included review available in ([^*\n]+?)\.?\*\*/
+    );
+    if (available !== null)
+      nextReview = { minutes: minutes(available[1]!), text: available[1]! };
     const waiting = [
       ...limited.matchAll(/between ([0-9a-f]{40}) and ([0-9a-f]{40})/g),
     ];
@@ -186,7 +235,7 @@ function codeRabbitComment(body: string): Facts {
   }
   for (const match of body.matchAll(/Review skipped|Reviews? paused/g))
     notes.push(match[0]);
-  return { reviewed, notes, summaryOnly };
+  return { reviewed, notes, summaryOnly, nextReview };
 }
 
 // Codex keeps its state as JSON in an HTML comment of its summary. It posts no review when it
@@ -220,7 +269,16 @@ export function coverage(pr: PullRequest): Report {
     const reviewed: Sha[] = [];
     const notes: string[] = [];
     let summaryOnly = false;
+    let nextReview: NextReview | null = null;
+    const bodyFindings: BodyFindings[] = [];
     for (const review of pr.reviews) {
+      if (
+        bot === "coderabbitai" &&
+        review.login === bot &&
+        review.commit !== null
+      )
+        for (const found of codeRabbitBodyFindings(review.body))
+          bodyFindings.push({ commit: review.commit, ...found });
       // A COMMENTED review with no body is a reply in a thread, not a pass over the commit.
       // A review of a commit that no longer exists says nothing about the head.
       if (
@@ -241,6 +299,8 @@ export function coverage(pr: PullRequest): Report {
       reviewed.push(...facts.reviewed);
       notes.push(...facts.notes);
       summaryOnly ||= facts.summaryOnly === true;
+      if (facts.nextReview !== undefined)
+        nextReview = { comment: comment.id, ...facts.nextReview };
     }
     if (bot === "cubic-dev-ai") {
       for (const check of pr.checks.filter((c) => c.name === CUBIC_CHECK)) {
@@ -257,6 +317,8 @@ export function coverage(pr: PullRequest): Report {
       reviewed: [...new Set(reviewed)],
       notes: [...new Set(notes)],
       summaryOnly,
+      bodyFindings,
+      nextReview,
     };
   });
   return {
@@ -269,9 +331,32 @@ export function covered(report: Report, bot: BotCoverage): boolean {
   return bot.reviewed.includes(report.head);
 }
 
+/**
+ * Whether the bots that review line by line covered the head. A summary-only bot finds nothing
+ * whether or not it summarized the head, so waiting for it would hold a merge for no review.
+ */
+export function headReviewed(report: Report): boolean {
+  const reviewers = report.bots.filter((bot) => !bot.summaryOnly);
+  return reviewers.length > 0 && reviewers.every((bot) => covered(report, bot));
+}
+
 const SUMMARY_ONLY = "Free plan, a summary without line-by-line review";
 
-export function render(report: Report): string {
+function nextReviewNote(next: NextReview, editedAt: Date | undefined): string {
+  if (next.minutes === null || editedAt === undefined)
+    return `next review available in ${next.text}`;
+  const at = new Date(editedAt.getTime() + next.minutes * 60_000);
+  return `next review available at ${at.toISOString().replace(".000Z", "Z")}`;
+}
+
+/**
+ * Renders the report. `editedAt` maps a bot comment's id to when it was last written, which turns
+ * a next-review delay stated in that comment into a time.
+ */
+export function render(
+  report: Report,
+  editedAt: ReadonlyMap<string, Date> = new Map()
+): string {
   const width = Math.max(0, ...report.bots.map((b) => b.bot.length));
   const lines = [`head ${report.head}`];
   for (const bot of report.bots) {
@@ -279,6 +364,18 @@ export function render(report: Report): string {
     const notes = [
       ...(bot.summaryOnly ? [SUMMARY_ONLY] : []),
       ...bot.notes,
+      ...(bot.nextReview === null
+        ? []
+        : [
+            nextReviewNote(
+              bot.nextReview,
+              editedAt.get(bot.nextReview.comment)
+            ),
+          ]),
+      ...bot.bodyFindings.map(
+        (f) =>
+          `${f.count} ${f.kind} ${f.count === 1 ? "finding" : "findings"} only in the body of its review of ${f.commit.slice(0, 12)}`
+      ),
     ].join("; ");
     const tail = notes === "" ? "" : `; ${notes}`;
     if (covered(report, bot))

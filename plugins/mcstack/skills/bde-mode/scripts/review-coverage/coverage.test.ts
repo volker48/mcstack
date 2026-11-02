@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { type CliRuntime, main } from "./cli.ts";
 import { coverage, parsePullRequest, render, type Sha } from "./coverage.ts";
 
-// `gh pr view --json headRefOid,reviews,comments,statusCheckRollup` output. mcstack-5 is a snapshot of
+// `gh pr view --json url,headRefOid,reviews,comments,statusCheckRollup` output. mcstack-5 is a snapshot of
 // that public PR. The free-plan ones are synthetic, because the PRs they stand for are private: they
 // keep the bots' markup from those PRs and replace the content and commits.
 function fixture(name: string): unknown {
@@ -18,6 +18,7 @@ const B = "b".repeat(40) as Sha;
 
 function pr(overrides: Record<string, unknown> = {}): unknown {
   return {
+    url: "https://github.com/owner/repo/pull/5",
     headRefOid: B,
     reviews: [],
     comments: [],
@@ -30,7 +31,12 @@ function codexState(sha: string, status = "completed", spacing = ""): string {
   return `<!-- codex-review-state:v1 {"code_review":{"commit_sha":${spacing}"${sha}","status":${spacing}"${status}"},"security_review":{"commit_sha":null}} -->`;
 }
 
-function runtime(stdout: string): {
+function runtime(
+  stdout: string,
+  graphql = JSON.stringify({
+    data: { node: { createdAt: "2026-11-01T16:00:00Z", lastEditedAt: null } },
+  })
+): {
   runtime: CliRuntime;
   out: string[];
   args: string[][];
@@ -43,7 +49,11 @@ function runtime(stdout: string): {
     runtime: {
       gh: async (a) => {
         args.push([...a]);
-        return { code: 0, stdout, stderr: "" };
+        return {
+          code: 0,
+          stdout: a[0] === "api" ? graphql : stdout,
+          stderr: "",
+        };
       },
       stdout: (text) => out.push(text),
       stderr: (text) => out.push(text),
@@ -57,7 +67,7 @@ describe("pull requests", () => {
     expect(render(report)).toBe(
       [
         "head 352f7829a2384b001cc12b0c2613c756454a1f6a",
-        "coderabbitai             MISSED the head; summarized e0996a37c13d; Free plan, a summary without line-by-line review; Review limit reached, skipped e0996a37c13d..352f7829a238",
+        "coderabbitai             MISSED the head; summarized e0996a37c13d; Free plan, a summary without line-by-line review; Review limit reached, skipped e0996a37c13d..352f7829a238; next review available in 57 minutes",
         "chatgpt-codex-connector  MISSED the head; reviewed e0996a37c13d",
         "no record from cubic-dev-ai",
         "",
@@ -83,7 +93,7 @@ describe("pull requests", () => {
     expect(render(report)).toBe(
       [
         "head b9316746be20a220d160b899952f491b36c0072e",
-        "coderabbitai             covered the head",
+        "coderabbitai             covered the head; 3 outside-diff findings only in the body of its review of 3d0f5cb0ac01",
         "chatgpt-codex-connector  covered the head",
         "cubic-dev-ai             covered the head",
         "",
@@ -97,7 +107,9 @@ describe("records", () => {
     const report = coverage(
       parsePullRequest(
         pr({
-          comments: [{ author: { login: "volker48" }, body: codexState(B) }],
+          comments: [
+            { id: "IC_1", author: { login: "volker48" }, body: codexState(B) },
+          ],
         })
       )
     );
@@ -158,6 +170,7 @@ describe("records", () => {
   it("reads Codex's state as JSON, whatever its spacing", () => {
     const comments = [
       {
+        id: "IC_1",
         author: { login: "chatgpt-codex-connector" },
         body: codexState(B, "completed", " "),
       },
@@ -169,6 +182,7 @@ describe("records", () => {
   it("does not count a Codex review that has not completed", () => {
     const comments = [
       {
+        id: "IC_1",
         author: { login: "chatgpt-codex-connector" },
         body: codexState(B, "in_progress"),
       },
@@ -179,6 +193,8 @@ describe("records", () => {
       reviewed: [],
       notes: ["Codex review in_progress"],
       summaryOnly: false,
+      bodyFindings: [],
+      nextReview: null,
     });
   });
 
@@ -190,7 +206,9 @@ describe("records", () => {
     ].join("\n");
     const [bot] = coverage(
       parsePullRequest(
-        pr({ comments: [{ author: { login: "coderabbitai" }, body }] })
+        pr({
+          comments: [{ id: "IC_1", author: { login: "coderabbitai" }, body }],
+        })
       )
     ).bots;
     expect(bot?.reviewed).toEqual([]);
@@ -204,7 +222,9 @@ describe("records", () => {
     ].join("\n");
     const [bot] = coverage(
       parsePullRequest(
-        pr({ comments: [{ author: { login: "coderabbitai" }, body }] })
+        pr({
+          comments: [{ id: "IC_1", author: { login: "coderabbitai" }, body }],
+        })
       )
     ).bots;
     expect(bot?.notes).toEqual(["Reviews paused"]);
@@ -224,7 +244,51 @@ describe("records", () => {
       reviewed: [],
       notes: ["cubic check in_progress"],
       summaryOnly: false,
+      bodyFindings: [],
+      nextReview: null,
     });
+  });
+
+  it("counts CodeRabbit's findings that live only in a review body, per reviewed commit", () => {
+    const reviews = [
+      {
+        author: { login: "coderabbitai" },
+        state: "COMMENTED",
+        body: "**⚠️ Outside diff range comments (2)**\n<summary>🧹 Nitpick comments (1)</summary>",
+        commit: { oid: A },
+      },
+      {
+        author: { login: "coderabbitai" },
+        state: "COMMENTED",
+        body: "Actionable comments posted: 0",
+        commit: { oid: B },
+      },
+    ];
+    const report = coverage(parsePullRequest(pr({ reviews })));
+    expect(render(report)).toContain(
+      "covered the head; 2 outside-diff findings only in the body of its review of aaaaaaaaaaaa; 1 nitpick finding only in the body of its review of aaaaaaaaaaaa"
+    );
+  });
+
+  it("keeps CodeRabbit's next-review wording when it names no duration", () => {
+    const body = [
+      "<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->",
+      "> **Next included review available in a moment.**",
+      "<!-- end of auto-generated comment: rate limited by coderabbit.ai -->",
+    ].join("\n");
+    const report = coverage(
+      parsePullRequest(
+        pr({
+          comments: [{ id: "IC_1", author: { login: "coderabbitai" }, body }],
+        })
+      )
+    );
+    expect(report.bots[0]?.nextReview).toEqual({
+      comment: "IC_1",
+      minutes: null,
+      text: "a moment",
+    });
+    expect(render(report)).toContain("next review available in a moment");
   });
 
   it("rejects output that is not a pull request", () => {
@@ -242,18 +306,95 @@ describe("main", () => {
       args,
     } = runtime(JSON.stringify(fixture("free-plan-limited")));
     expect(await main(["150", "--repo", "octo/repo"], rt)).toBe(1);
-    expect(args).toEqual([
-      [
-        "pr",
-        "view",
-        "150",
-        "--repo",
-        "octo/repo",
-        "--json",
-        "headRefOid,reviews,comments,statusCheckRollup",
-      ],
+    expect(args[0]).toEqual([
+      "pr",
+      "view",
+      "150",
+      "--repo",
+      "octo/repo",
+      "--json",
+      "url,headRefOid,reviews,comments,statusCheckRollup",
     ]);
     expect(out.join("")).toContain("MISSED the head");
+  });
+
+  it("prints CodeRabbit's next review as a time counted from the notice's last edit", async () => {
+    const {
+      runtime: rt,
+      out,
+      args,
+    } = runtime(
+      JSON.stringify(fixture("free-plan-limited")),
+      JSON.stringify({
+        data: {
+          node: {
+            createdAt: "2026-11-01T16:08:09Z",
+            lastEditedAt: "2026-11-01T17:10:30Z",
+          },
+        },
+      })
+    );
+    await main(["150"], rt);
+    expect(args[1]).toContain("id=IC_free-plan-limited-1");
+    expect(args[1]).toContain("github.com");
+    expect(out.join("")).toContain(
+      "next review available at 2026-11-01T18:07:30Z"
+    );
+  });
+
+  it("looks the notice up on the PR's own host", async () => {
+    const { runtime: rt, args } = runtime(
+      JSON.stringify({
+        ...(fixture("free-plan-limited") as object),
+        url: "https://ghe.example/octo/repo/pull/150",
+      })
+    );
+    await main(["https://ghe.example/octo/repo/pull/150"], rt);
+    const at = args[1]!.indexOf("--hostname");
+    expect(args[1]![at + 1]).toBe("ghe.example");
+  });
+
+  it("keeps the report and the delay when the notice's edit time cannot be read", async () => {
+    const { runtime: rt, out } = runtime(
+      JSON.stringify(fixture("free-plan-limited")),
+      JSON.stringify({ data: { node: null } })
+    );
+    expect(await main(["150"], rt)).toBe(1);
+    const text = out.join("");
+    expect(text).toContain(
+      "review-coverage: printing coderabbitai's next review as a delay: comment IC_free-plan-limited-1 not found\n"
+    );
+    expect(text).toContain("next review available in 57 minutes");
+  });
+
+  it("exits 0 when only a summary-only bot missed the head", async () => {
+    const comments = [
+      {
+        id: "IC_1",
+        author: { login: "coderabbitai" },
+        body: `- **Plan**: Free\n<!-- recent_review_start -->between ${A} and ${A}.<!-- recent_review_end -->`,
+      },
+      {
+        id: "IC_2",
+        author: { login: "chatgpt-codex-connector" },
+        body: codexState(B),
+      },
+    ];
+    const { runtime: rt, out } = runtime(JSON.stringify(pr({ comments })));
+    expect(await main(["5"], rt)).toBe(0);
+    expect(out.join("")).toContain("coderabbitai             MISSED the head");
+  });
+
+  it("exits 1 when only a summary-only bot left a record, since nothing reviewed the head", async () => {
+    const comments = [
+      {
+        id: "IC_1",
+        author: { login: "coderabbitai" },
+        body: `- **Plan**: Free\n<!-- recent_review_start -->between ${A} and ${B}.<!-- recent_review_end -->`,
+      },
+    ];
+    const { runtime: rt } = runtime(JSON.stringify(pr({ comments })));
+    expect(await main(["5"], rt)).toBe(1);
   });
 
   it("exits 0 when every bot covered the head", async () => {
