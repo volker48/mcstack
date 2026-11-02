@@ -1,7 +1,7 @@
 import { run } from "../watch-pr/github.ts";
 import {
   coverage,
-  covered,
+  headReviewed,
   parsePullRequest,
   render,
   type Report,
@@ -30,11 +30,38 @@ function describe(error: unknown): string {
     : `${error.message}: ${describe(error.cause)}`;
 }
 
+// gh pr view gives a comment's creation time only, and CodeRabbit rewrites its summary comment in
+// place, so the time its next-review delay counts from comes from GraphQL.
+async function editedAt(runtime: CliRuntime, comment: string): Promise<Date> {
+  const result = await runtime.gh([
+    "api",
+    "graphql",
+    "-f",
+    "query=query($id: ID!) { node(id: $id) { ... on IssueComment { createdAt lastEditedAt } } }",
+    "-F",
+    `id=${comment}`,
+  ]);
+  if (result.code !== 0)
+    throw new Error(
+      `gh api graphql for comment ${comment} failed: ${result.stderr.trim()}`
+    );
+  const node = (JSON.parse(result.stdout) as { data?: { node?: unknown } }).data
+    ?.node;
+  if (typeof node !== "object" || node === null)
+    throw new Error(`comment ${comment} not found`);
+  const { createdAt, lastEditedAt } = node as Record<string, unknown>;
+  const time = new Date(String(lastEditedAt ?? createdAt));
+  if (Number.isNaN(time.getTime()))
+    throw new Error(`comment ${comment} has no edit time`);
+  return time;
+}
+
 /**
  * Prints the commit each review bot covered against the PR head.
  *
- * Exits 0 when every bot with a record on the PR covered or summarized the head, 1 when one
- * missed it or no bot left a record, and 2 when the check could not run.
+ * Exits 0 when every bot with a record on the PR that reviews line by line covered the head, 1
+ * when one missed it or no such bot left a record, and 2 when the check could not run. A
+ * summary-only bot is printed but never decides the exit.
  */
 export async function main(
   argv: readonly string[],
@@ -56,6 +83,7 @@ export async function main(
     return 2;
   }
   let report: Report;
+  const edits = new Map<string, Date>();
   try {
     const result = await runtime.gh([
       "pr",
@@ -70,14 +98,17 @@ export async function main(
       return 2;
     }
     report = coverage(parsePullRequest(JSON.parse(result.stdout)));
+    for (const bot of report.bots)
+      if (bot.nextReview !== null && bot.nextReview.minutes !== null)
+        edits.set(
+          bot.nextReview.comment,
+          await editedAt(runtime, bot.nextReview.comment)
+        );
   } catch (error) {
     // Exit 1 means a bot missed the head, so an uncaught error must not exit with it.
     runtime.stderr(`review-coverage: ${describe(error)}\n`);
     return 2;
   }
-  runtime.stdout(render(report));
-  return report.bots.length > 0 &&
-    report.bots.every((bot) => covered(report, bot))
-    ? 0
-    : 1;
+  runtime.stdout(render(report, edits));
+  return headReviewed(report) ? 0 : 1;
 }
