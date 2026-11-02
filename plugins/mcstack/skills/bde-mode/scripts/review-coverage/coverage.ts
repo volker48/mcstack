@@ -15,7 +15,8 @@ interface Review {
   readonly login: string;
   readonly state: string;
   readonly body: string;
-  readonly commit: Sha;
+  // Null when the reviewed commit no longer exists, as after a force-push.
+  readonly commit: Sha | null;
 }
 
 interface Comment {
@@ -99,10 +100,13 @@ export function parsePullRequest(json: unknown): PullRequest {
         login: login(review.author, `reviews[${i}].author`),
         state: string(review.state, `reviews[${i}].state`),
         body: string(review.body, `reviews[${i}].body`),
-        commit: sha(
-          object(review.commit, `reviews[${i}].commit`).oid,
-          `reviews[${i}].commit.oid`
-        ),
+        commit:
+          review.commit === null
+            ? null
+            : sha(
+                object(review.commit, `reviews[${i}].commit`).oid,
+                `reviews[${i}].commit.oid`
+              ),
       };
     }),
     comments: array(pr.comments, "comments").map((raw, i) => {
@@ -218,8 +222,10 @@ export function coverage(pr: PullRequest): Report {
     let summaryOnly = false;
     for (const review of pr.reviews) {
       // A COMMENTED review with no body is a reply in a thread, not a pass over the commit.
+      // A review of a commit that no longer exists says nothing about the head.
       if (
         review.login === bot &&
+        review.commit !== null &&
         (review.body !== "" || review.state !== "COMMENTED")
       )
         reviewed.push(review.commit);

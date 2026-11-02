@@ -123,6 +123,25 @@ describe("records", () => {
     expect(bot?.reviewed).toEqual([A]);
   });
 
+  it("skips a review whose commit no longer exists", () => {
+    const reviews = [
+      {
+        author: { login: "coderabbitai" },
+        state: "COMMENTED",
+        body: "Actionable comments: 1",
+        commit: null,
+      },
+      {
+        author: { login: "coderabbitai" },
+        state: "COMMENTED",
+        body: "Actionable comments: 0",
+        commit: { oid: B },
+      },
+    ];
+    const [bot] = coverage(parsePullRequest(pr({ reviews }))).bots;
+    expect(bot?.reviewed).toEqual([B]);
+  });
+
   it("counts a bot's approval without a body", () => {
     const reviews = [
       {
