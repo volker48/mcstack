@@ -20,9 +20,17 @@ ls -t ~/.claude/projects/<slug>/*.jsonl ~/.claude/projects/<slug>/*/subagents/*.
 
 That covers the session (`<session-uuid>.jsonl`) and subagent (`<session-uuid>/subagents/agent-<id>.jsonl`) layouts. The current session is usually the most recently modified `.jsonl`. To confirm, grep each candidate for a distinctive phrase from the conversation's opening user prompt and take the file that contains it. If none matches, pass a tight digest of the session instead.
 
+Digest the transcript once, into the session scratchpad directory, so the reviewers share one digest instead of each building their own. `<scratchpad>` is that directory's absolute path, as your system prompt names it; without one, make a directory with `mktemp -d` and use its path:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/reflect/scripts/digest.py <transcript> > <scratchpad>/reflect-digest.txt
+```
+
+It prints one numbered line per text, tool call, and tool result of the `user` and `assistant` lines, cutting tool inputs and results to 500 characters (`--max-chars` changes that). A tool call and its result share a `#<id>` tag, so parallel calls pair with their results. It ends with the session's subagent transcripts and their descriptions, leaving out reflect's own agents. Passing a subagent transcript's path digests that one.
+
 ## 2. Spawn three reviewers in parallel
 
-One message, three `Agent` calls, `subagent_type: "general-purpose"`. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references.
+One message, three `Agent` calls, `subagent_type: "general-purpose"`, each with the `description` `Reflect: <lens> reviewer`, such as `Reflect: judgment reviewer`. The digest script leaves out agents whose description starts with `Reflect`. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references.
 
 Each reviewer and the synthesizer name a role line in the `~/.claude/mcstack-models.md` config and a default. Set the Agent `model` and `effort` from that line's value, or from the default if the config or the line is missing (see Role values in the **bde-mode** skill). Leave `model` unset when the value is `auto` or `inherit-parent`. If the Agent tool rejects a value, use the default and say so. Pick each subagent's model and effort for the job, per the Subagents section of the **bde-mode** skill.
 
@@ -32,11 +40,11 @@ Each reviewer and the synthesizer name a role line in the `~/.claude/mcstack-mod
 | Tooling | `reflect tooling` | `sonnet-xhigh` | `references/tooling-reviewer.md` |
 | Divergent | `reflect judgment, divergent, synthesizer` | `opus-xhigh` | `references/divergent-reviewer.md` |
 
-Pass each template verbatim, substituting the transcript path or digest where marked. Parallel reviewers share the session scratchpad directory, so after each template append one line naming that reviewer's own subfolder of it by absolute path (`reflect-judgment/`, `reflect-tooling/`, `reflect-divergent/`; the synthesizer gets `reflect-synth/`). Reviewers return findings in the `Agent` response body.
+Pass each template verbatim, substituting where marked: `<ABSOLUTE_PATH>` with the transcript, `<DIGEST_PATH>` with the digest file, and `<DIGEST_SCRIPT>` with the absolute path of `digest.py`. When no transcript matched, leave the paths out and put the tight digest where the template marks it. Parallel reviewers share the session scratchpad directory, so after each template append one line naming that reviewer's own subfolder of it by absolute path (`reflect-judgment/`, `reflect-tooling/`, `reflect-divergent/`; the synthesizer gets `reflect-synth/`). Reviewers return findings in the `Agent` response body.
 
 ## 3. Synthesize
 
-One `Agent` call, `subagent_type: "general-purpose"`, `model` from the `reflect judgment, divergent, synthesizer` line (default `opus-xhigh`). It spot-verifies citations through MCP. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
+One `Agent` call, `subagent_type: "general-purpose"`, `description` `Reflect: synthesizer`, `model` from the `reflect judgment, divergent, synthesizer` line (default `opus-xhigh`). It spot-verifies citations through MCP. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
 
 ## 4. Structural enforcement check
 
