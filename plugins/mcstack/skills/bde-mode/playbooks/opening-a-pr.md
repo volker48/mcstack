@@ -6,6 +6,8 @@ Invoked at the end of every other playbook.
 
 **Commits.** Commit liberally. Rebase into small, ordered commits before opening PRs. Each commit is a future PR: landable, ordered to tell the story. Amend when the fix belongs in a just-made commit. New commit when separable. Commit bodies don't restate the subject.
 
+**Captured data.** Fixtures, logs, and transcripts captured from one repository keep its names, PR numbers, and content. Before they go to a repository with different visibility, scrub them or replace them with synthetic data. A private repository's name in a public fixture is already a leak.
+
 **PRs.** Run `/simplify` over the diff before commit and `/no-comments` before review. Write every PR title, description, and commit body with `/technical-writing` (every layer except Diátaxis, and apply the STE vocabulary rules: one word per action, keep articles, a plain verb over `-ing` where one works), then apply `/unslop`.
 
 **Titles.** Conventional Commits `type(scope): subject`, no trailing period. Type such as `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, or `perf`. Scope is the area, such as `mcstack` or `bde-mode`. Subject is short, imperative, and names a real symbol when one carries the change, for example `fix(mcstack): retarget opening-a-pr babysit trigger`.

@@ -1,0 +1,10 @@
+# Repositories that tracked files may name, lowercase, one owner/name per line.
+# Each one is public, or a placeholder. See scripts/check-repo-refs.sh.
+cursor/plugins
+dannymac180/skills
+humanlayer/skills
+mattpocock/skills
+owner/repo
+robonuggets/be-ambitious
+tlaplus/tlaplus
+volker48/mcstack
