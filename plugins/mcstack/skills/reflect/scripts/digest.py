@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
@@ -37,8 +38,13 @@ REFLECT_AGENT = re.compile(r"^Reflect[:\s]")
 
 
 def one_line(text: str) -> str:
-    """Escape newlines so an entry stays on one output line."""
-    return text.replace("\r\n", "\n").replace("\n", "\\n")
+    """Escape line breaks so an entry stays on one output line."""
+    return text.replace("\r\n", "\n").replace("\n", "\\n").replace("\r", "\\r")
+
+
+def short_id(block: dict[str, object], key: str) -> str:
+    """The last 8 characters of a tool call's id, to pair parallel calls with results."""
+    return str(block.get(key) or "?")[-8:]
 
 
 def clip(text: str, limit: int | None) -> str:
@@ -120,11 +126,13 @@ def entries(record: dict[str, Any], max_chars: int) -> Iterator[str]:
             args = json.dumps(
                 block.get("input"), ensure_ascii=False, separators=(",", ":")
             )
-            yield f"{role} TOOL_USE {name}: {one_line(clip(args, max_chars))}"
+            call = short_id(block, "id")
+            yield f"{role} TOOL_USE {name} #{call}: {one_line(clip(args, max_chars))}"
         elif kind == "tool_result":
             label = "RESULT ERR" if block.get("is_error") else "RESULT"
             text = result_text(block.get("content"))
-            yield f"{role} {label}: {one_line(clip(text, max_chars))}"
+            call = short_id(block, "tool_use_id")
+            yield f"{role} {label} #{call}: {one_line(clip(text, max_chars))}"
 
 
 def digest(path: Path, max_chars: int) -> Iterator[str]:
@@ -215,6 +223,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.max_chars < 1:
         parser.error("--max-chars must be at least 1")
 
+    # A lone surrogate from a JSON escape such as \ud83d cannot be encoded,
+    # so print it escaped rather than stop partway through.
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(errors="backslashreplace")
     print(f"# Digest of {path}")
     for line in digest(path, args.max_chars):
         print(line)
@@ -232,9 +244,11 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     try:
-        sys.exit(main())
+        status = main()
+        sys.stdout.flush()
     except BrokenPipeError:
         # The reader, such as `head`, closed the pipe. Point stdout at
         # /dev/null so the flush at exit does not raise again.
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        sys.exit(0)
+        status = 0
+    sys.exit(status)

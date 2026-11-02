@@ -20,13 +20,13 @@ ls -t ~/.claude/projects/<slug>/*.jsonl ~/.claude/projects/<slug>/*/subagents/*.
 
 That covers the session (`<session-uuid>.jsonl`) and subagent (`<session-uuid>/subagents/agent-<id>.jsonl`) layouts. The current session is usually the most recently modified `.jsonl`. To confirm, grep each candidate for a distinctive phrase from the conversation's opening user prompt and take the file that contains it. If none matches, pass a tight digest of the session instead.
 
-Digest the transcript once, into the session scratchpad directory, so the reviewers share one digest instead of each building their own:
+Digest the transcript once, into the session scratchpad directory, so the reviewers share one digest instead of each building their own. `<scratchpad>` is that directory's absolute path, as your system prompt names it; without one, make a directory with `mktemp -d` and use its path:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/reflect/scripts/digest.py <transcript> > <scratchpad>/reflect-digest.txt
 ```
 
-It prints one numbered line per text, tool call, and tool result of the `user` and `assistant` lines, cutting tool inputs and results to 500 characters (`--max-chars` changes that). It ends with the session's subagent transcripts and their descriptions, leaving out reflect's own agents. Passing a subagent transcript's path digests that one.
+It prints one numbered line per text, tool call, and tool result of the `user` and `assistant` lines, cutting tool inputs and results to 500 characters (`--max-chars` changes that). A tool call and its result share a `#<id>` tag, so parallel calls pair with their results. It ends with the session's subagent transcripts and their descriptions, leaving out reflect's own agents. Passing a subagent transcript's path digests that one.
 
 ## 2. Spawn three reviewers in parallel
 
