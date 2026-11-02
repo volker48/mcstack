@@ -223,10 +223,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.max_chars < 1:
         parser.error("--max-chars must be at least 1")
 
-    # A lone surrogate from a JSON escape such as \ud83d cannot be encoded,
-    # so print it escaped rather than stop partway through.
+    # The digest is UTF-8 whatever the locale, and a lone surrogate from a
+    # JSON escape such as \ud83d prints escaped rather than stopping it.
     if isinstance(sys.stdout, io.TextIOWrapper):
-        sys.stdout.reconfigure(errors="backslashreplace")
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     print(f"# Digest of {path}")
     for line in digest(path, args.max_chars):
         print(line)
