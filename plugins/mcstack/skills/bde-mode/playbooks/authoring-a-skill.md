@@ -3,7 +3,7 @@
 **You own the skill's voice.**
 
 1. Use the **skill-creator** skill (`/skill-creator`, Anthropic's skill-authoring skill) when it is installed. Otherwise follow the Claude Code skills docs at https://code.claude.com/docs/en/skills.
-2. Validate the skill: frontmatter has `name` and `description`, referenced files exist, cross-skill links resolve.
+2. Validate the skill: frontmatter has `name` and `description`, referenced files exist, cross-skill links resolve. Check frontmatter keys against the Claude Code skills docs, not skill-creator's `quick_validate.py`, which rejects keys Claude Code supports such as `disable-model-invocation`. Keep the key and ignore that error.
 3. Test cases if structural. Skip if subjective.
 4. Run **Opening a PR**.
 
