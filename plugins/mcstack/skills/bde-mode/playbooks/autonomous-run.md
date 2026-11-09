@@ -8,6 +8,7 @@
    Sequence the work via the **sequence-verifiable-units** principle skill, verifying each unit before the next instead of batching checks at the end.
 4. Mid-run discoveries that support the goal are yours. Address broken skills, related bugs, flaky verifiers, review noise, tooling failures, orphaned follow-ups, and fixable drift yourself via bde-mode. Put out-of-band fixes in their own PR. Do not park reversible work for the human or use `AskUserQuestion`. Surface only irreversible actions, genuine product or preference calls no experiment can settle, or a real dead end. Keep the predicate as the main drive, and return to it after each side fix.
 5. Checkpoint every iteration via the **show-me-your-work** skill, a row for what changed and whether the predicate moved.
-6. Stop when the predicate is met. A plateau is not a stop, so keep going and pivot your approach to push past it. Surface a genuine dead end rather than spinning, and never relax the predicate to declare victory.
+6. Before you report the predicate met, run the bug-hunting review of the branch from bde-mode's "Before commit" line, and treat its findings as further iterations. `/simplify` and a trail review do not look for bugs.
+7. Stop when the predicate is met. A plateau is not a stop, so keep going and pivot your approach to push past it. Surface a genuine dead end rather than spinning, and never relax the predicate to declare victory.
 
 **Reply:** the exit condition, iterations run, what landed, what was discarded, final predicate state.
