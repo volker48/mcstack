@@ -77,6 +77,7 @@ The default answer is `/bde-mode`, which runs most of the others when its steps 
 | Settle types and module shape before code that crosses a function boundary | [`/architect`](../architect/SKILL.md) |
 | Get several attempts at one brief, merged into the best one | [`/arena`](../arena/SKILL.md) |
 | Run parallel checks over slices, or race workers, as background agents | [`/swarm`](../swarm/SKILL.md) |
+| Take one PR through review, fixes, and CI to merged, without the full `/bde-mode` process | [`/ship-it`](../ship-it/SKILL.md) |
 | Have different models review a diff and try to break it | [`/interrogate`](../interrogate/SKILL.md) |
 | Fix a bug test-first when a cheap local test exists | [`/tdd`](../tdd/SKILL.md) |
 | Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |
@@ -107,6 +108,7 @@ Close calls:
 - `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.
 - `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.
 - `/architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
+- `/ship-it` merges one PR after a second-model review and green CI, all in the current chat. `/bde-mode`'s Babysit and Shipping playbooks handle stacks and add independent verifiers before anything lands.
 - `/interrogate` reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
 - `/show-me` draws the current topic. `/show-me-your-work` keeps a decision log for a long run.
 - `/reflect` turns a session's lessons into skill edits. `/retro` reviews a session for environment fixes such as navigation pointers, checks, steering files, and tool access, and only proposes them. `/correct` mines repo history and builds the enforcement.
