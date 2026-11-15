@@ -6,6 +6,6 @@ disable-model-invocation: true
 
 # Encode Lessons in Structure
 
-If the lesson needs judgment and cannot be encoded, make the instruction more prominent and add an example of the failure mode.
+If the lesson needs judgment and cannot be encoded, state the instruction once, plainly, next to the work it governs, with the reason and the failure it prevents.
 
 **Corollary:** If the fix is structural, only use the structural fix. The instruction is the symptom.
