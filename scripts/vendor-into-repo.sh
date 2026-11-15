@@ -101,10 +101,8 @@ done
 for a in "${agents[@]}"; do md_files+=("$dest/agents/$a.md"); done
 
 perl -pi -e '
-	s{This file is `\$\{CLAUDE_PLUGIN_ROOT\}/skills/bde-mode/SKILL\.md`\.}{This file is `.claude/skills/bde-mode/SKILL.md` at the repository root. Relative paths below, such as `playbooks/` and `references/`, are relative to `.claude/skills/bde-mode/`.}g;
 	s{With no path, read `\$\{CLAUDE_PLUGIN_ROOT\}/skills/bde-mode/SKILL\.md`\. If that path does not resolve, search `~/\.claude/plugins/` for a file whose path ends in `mcstack/skills/bde-mode/SKILL\.md` and use the most recently modified copy\.}{With no path, read `.claude/skills/bde-mode/SKILL.md` from the repository root.}g;
 	s{If no such file exists, stop and tell your parent\.}{If that file does not exist, stop and tell your parent.}g;
-	s{"\$\{CLAUDE_PLUGIN_ROOT\}/skills/statechart/}{"\$\{CLAUDE_SKILL_DIR\}/}g;
 	s{\$\{CLAUDE_PLUGIN_ROOT\}/skills/}{.claude/skills/}g;
 	s{(?<![/\w])plugins/mcstack/skills/}{.claude/skills/}g;
 	s{"mcstack:([A-Za-z0-9_-]+)"}{"$1"}g;
@@ -145,8 +143,7 @@ Cloud threads in a Claude project load neither.
 - License and attribution: \`LICENSE\` and \`THIRD_PARTY_NOTICES\` in this folder.
 
 The script rewrites what only works in a plugin: \`\${CLAUDE_PLUGIN_ROOT}/skills/\`
-paths become \`.claude/skills/\` (\`\${CLAUDE_SKILL_DIR}\` for the statechart
-command), \`mcstack:\`-prefixed agent names lose the prefix, and links to the
+paths become \`.claude/skills/\`, \`mcstack:\`-prefixed agent names lose the prefix, and links to the
 plugin README, guide pages, and \`setup-mcstack\` become GitHub URLs.
 
 ## Updating
