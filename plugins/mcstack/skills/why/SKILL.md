@@ -14,7 +14,7 @@ Every spawn is `subagent_type: "general-purpose"`. **Do not use `Explore` or ano
 
 ## Operating Posture
 
-Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring. Read `references/epistemics.md` for the full confidence framework and phrasing guide. The synthesizer must follow it.
+Separate what you know from what you infer. Read `references/epistemics.md` for the full confidence framework and phrasing guide. The synthesizer must follow it.
 
 ## Step 1. Understand the Target and the Question
 
