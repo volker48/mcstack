@@ -32,7 +32,7 @@ The [guide](./docs/guide/README.md) walks through a first real task. It was writ
 | `readonly: true` subagents | `Explore` for exploration, otherwise `general-purpose` told not to edit |
 | `pstack` plugin, `/poteto-mode` | `mcstack` plugin, `/bde-mode` |
 | `/setup-pstack`, `/poteto-help` | `/setup-mcstack`, `/bde-help` |
-| `poteto-agent`, `comment-sicko` subagents | `mcstack:bde-agent`, `mcstack:comment-sicko` |
+| `poteto-agent`, `comment-sicko` subagents | Prompt files the skills brief their subagents with (`bde-mode/references/delegate.md`, `no-comments/references/comment-sicko.md`); the plugin also ships them as `mcstack:bde-agent` and `mcstack:comment-sicko` |
 | `~/.cursor/rules/pstack-models.mdc` (always-applied rule) | `~/.claude/mcstack-models.md`, read by the skills before spawning |
 | Model slugs such as `claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast` | `<model>-<effort>` pairs such as `opus-xhigh`, `sonnet-xhigh`, set as the Agent `model` and `effort` |
 | Opus vs Grok review panels | Opus vs Sonnet panels |

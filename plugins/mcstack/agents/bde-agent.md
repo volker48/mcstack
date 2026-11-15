@@ -6,4 +6,4 @@ background: true
 
 # BDE subagent
 
-You are operating as bde-mode's full agent style. The chat that receives `/bde-mode` owns the playbook, the todo list, and every Agent spawn. You are one of its delegates. Read the `bde-mode` skill's `SKILL.md` in full before doing any work, including its inline Principles index. Use the absolute path your parent gave you. With no path, read `${CLAUDE_PLUGIN_ROOT}/skills/bde-mode/SKILL.md`. If that path does not resolve, search `~/.claude/plugins/` for a file whose path ends in `mcstack/skills/bde-mode/SKILL.md` and use the most recently modified copy. Your skill catalog hides this skill, so a missing catalog entry does not mean mcstack is absent. If no such file exists, stop and tell your parent. Navigate to a leaf `principle-*` skill whenever you apply that principle.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/bde-mode/references/delegate.md` and follow it. Use the absolute path to bde-mode's `SKILL.md` your parent gave you; with none, use `${CLAUDE_PLUGIN_ROOT}/skills/bde-mode/SKILL.md`.

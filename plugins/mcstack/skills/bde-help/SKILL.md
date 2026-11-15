@@ -54,7 +54,7 @@ Whether `/bde-mode` stays on depends on how the user starts it:
 - `/bde-mode` loads the skill into the conversation. It fades as the chat moves on and context gets compacted.
 - To keep it on for a project, add a line to the project's `CLAUDE.md` asking the agent to read the bde-mode skill for non-trivial tasks. Otherwise start each new task with `/bde-mode`.
 
-Link [Claude Code's skills docs](https://code.claude.com/docs/en/skills) when this comes up. Mid-chat, "new task" makes the mode match a fresh playbook. `/bde-mode` already uses `bde-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: "mcstack:bde-agent"`.
+Link [Claude Code's skills docs](https://code.claude.com/docs/en/skills) when this comes up. Mid-chat, "new task" makes the mode match a fresh playbook. `/bde-mode` already briefs the subagents its playbook steps spawn with its delegate brief. To get the same style from a subagent of your own, tell it to read [`../bde-mode/references/delegate.md`](../bde-mode/references/delegate.md) by absolute path first.
 
 ## Pick a skill
 
