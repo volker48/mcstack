@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # BDE mode
 
-This file is `${CLAUDE_SKILL_DIR}/SKILL.md`, and relative paths below, such as `playbooks/` and `references/`, are relative to its directory. Bundled skills sit beside that directory, at `${CLAUDE_SKILL_DIR}/../<name>/SKILL.md`. They are hidden from the Skill tool, so when a step names a skill, Read its `SKILL.md` from that path. Put this file's absolute path in every `bde-agent` prompt.
+This file is the `SKILL.md` in the bde-mode skill's directory, and relative paths below, such as `playbooks/` and `references/`, are relative to that directory. Bundled skills sit beside it, at `../<name>/SKILL.md`. They are hidden from the Skill tool, so when a step names a skill, Read its `SKILL.md` from that path. Put this file's absolute path in every `bde-agent` prompt.
 
 ## Non-negotiables
 

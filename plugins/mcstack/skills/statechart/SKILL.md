@@ -10,10 +10,10 @@ The chart shows how a system moves between states, in the words of the person wh
 
 ## Run
 
-Work in a scratch folder outside the repo. Write a TLA+ spec and its config. Then run the `scripts/statechart` wrapper in this skill's directory:
+Work in a scratch folder outside the repo. Write a TLA+ spec and its config. Then run the `scripts/statechart` wrapper, where `<skill dir>` is the absolute path of the directory holding this `SKILL.md`:
 
 ```sh
-"${CLAUDE_SKILL_DIR}/scripts/statechart" SPEC.tla [--config FILE] [--view FILE] [--out DIR]
+"<skill dir>/scripts/statechart" SPEC.tla [--config FILE] [--view FILE] [--out DIR]
 ```
 
 `scripts/statechart.ts` is TypeScript, so run it with a runtime that can execute TypeScript.

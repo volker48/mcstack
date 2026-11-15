@@ -46,7 +46,6 @@ The [guide](./docs/guide/README.md) walks through a first real task. It was writ
 | Custom Modes | start each task with `/bde-mode`, or point `CLAUDE.md` at it |
 | `.cursor/skills/` | `.claude/skills/` |
 | Project tracker and Project store | `~/.claude/mcstack/orchestrate/<project-slug>/notes.md` |
-| `<skill dir>` in script commands | `${CLAUDE_SKILL_DIR}` |
 | An embedded chat video | `SendUserFile`, or the file's path |
 | `is_background: true` agent frontmatter | `background: true` |
 
