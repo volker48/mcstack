@@ -8,3 +8,4 @@ owner/repo
 robonuggets/be-ambitious
 tlaplus/tlaplus
 volker48/mcstack
+vercel-labs/skills

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # BDE mode
 
-This file is `${CLAUDE_PLUGIN_ROOT}/skills/bde-mode/SKILL.md`. Bundled skills live at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. They are hidden from the Skill tool, so when a step names a skill, Read its `SKILL.md` from that path. Put this file's absolute path in every `bde-agent` prompt.
+This file is the `SKILL.md` in the bde-mode skill's directory, and relative paths below, such as `playbooks/` and `references/`, are relative to that directory. Bundled skills sit beside it, at `../<name>/SKILL.md`. They are hidden from the Skill tool, so when a step names a skill, Read its `SKILL.md` from that path. Put this file's absolute path in every delegate's prompt.
 
 ## Non-negotiables
 
@@ -89,7 +89,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 ## Subagents
 
-**Use `subagent_type: "mcstack:bde-agent"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/bde-mode` runs the playbook. Never spawn a `bde-agent` to run the playbook itself. Routed workflow skills (`how`, `why`, `interrogate`, `reflect`, `swarm`) set their own `subagent_type` for diverse-model review. Respect what the skill prescribes, don't override to `bde-agent`.
+**Brief every subagent you spawn inside a playbook step with [`references/delegate.md`](references/delegate.md)** (code-writing delegates, ad-hoc helpers). Start its prompt by telling it to read that file, and give it this file's absolute path. A general-purpose subagent that skips the brief skips the read of this file and drifts. The chat that receives `/bde-mode` runs the playbook. Never spawn a delegate to run the playbook itself. Routed workflow skills (`how`, `why`, `interrogate`, `reflect`, `swarm`) set their own subagent types for diverse-model review. Respect what the skill prescribes, and don't swap in a delegate.
 
 **Role values.** mcstack names a subagent's model as `<model>-<effort>`, such as `opus-xhigh` or `sonnet-high`. `<model>` is an Agent tool `model` value (`opus`, `sonnet`, `haiku`, or `fable`) and `<effort>` is its `effort` value (`low`, `medium`, `high`, `xhigh`, or `max`). Set both on the Agent call. Role lines live in `~/.claude/mcstack-models.md`, which `/setup-mcstack` writes. Read it once per session before the first spawn. A missing file or line means the default applies.
 
