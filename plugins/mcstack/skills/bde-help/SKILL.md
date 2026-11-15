@@ -39,7 +39,7 @@ When the model config is missing and it matters, ask whether the user wants to p
 2. Run [`/setup-mcstack`](../setup-mcstack/SKILL.md). It asks for a reasoning budget, maps a model and effort to each role, and writes `~/.claude/mcstack-models.md`. Skills read it at spawn time. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/bde-mode`, a goal, and a check that can pass or fail.
 
-Installing changes nothing until the user invokes a skill. Only `/setup-mcstack` loads from the user's words. The [README](../../README.md) and [guide page 1](../../docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
+Installing changes nothing until the user invokes a skill. Only `/setup-mcstack` loads from the user's words. The [README](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/README.md) and [guide page 1](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
 
 If cost is the worry, say where the tokens go and how to spend fewer. mcstack spends extra tokens on subagents and review panels. Rerun `/setup-mcstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on a cheaper model. Moving roles from `opus` to `sonnet` or `haiku`, or lowering effort, also saves tokens. A shorter panel list runs fewer subagents, one for each entry. Save `/bde-mode` for work that needs rigor.
 
@@ -47,7 +47,7 @@ mcstack is ported to Claude Code from pstack, which was built for Cursor. Model 
 
 ## Start a task with `/bde-mode`
 
-`/bde-mode` matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-bde-mode.md) has examples.
+`/bde-mode` matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/02-bde-mode.md) has examples.
 
 Whether `/bde-mode` stays on depends on how the user starts it:
 
@@ -131,11 +131,11 @@ Playbooks are step lists inside `/bde-mode`, not skills, so they have no slash c
 - "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
 - "run the eval playbook" runs Eval.
 
-Without `/bde-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`bde-mode`](../bde-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
+Without `/bde-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`bde-mode`](../bde-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
 
 mcstack has no planning skill. Claude Code's plan mode works alongside it. For work that spans phases or stacked PRs, asking `/bde-mode` for a plan runs the [Multi-phase plan playbook](../bde-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/architect` settles it in code first.
 
-Principles are one-rule skills that `/bde-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in "apply prove it works. show me the real output." Typing `/principle-<name>` still loads one on demand. [Guide page 8](../../docs/guide/08-principles.md) lists them.
+Principles are one-rule skills that `/bde-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in "apply prove it works. show me the real output." Typing `/principle-<name>` still loads one on demand. [Guide page 8](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/08-principles.md) lists them.
 
 ## Fix a run that went wrong
 
@@ -147,10 +147,10 @@ Principles are one-rule skills that `/bde-mode` reads and cites in its replies. 
 | Runs cost more than expected | See the cost paragraph under Get set up. |
 | A skill didn't load on its own | Only `/setup-mcstack` loads from the user's words. The others load when the user types them or when `/bde-mode` runs them, and it doesn't run every skill. |
 | Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |
-| An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See [guide page 7](../../docs/guide/07-overnight.md). |
+| An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See [guide page 7](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/07-overnight.md). |
 | The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |
 
-For a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](../../docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.
+For a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.
 
 ## Make mcstack my own
 
@@ -159,7 +159,7 @@ For a run that drifts, [`references/prompting.md`](references/prompting.md) has 
 - `/bde-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.
 - Fix a misbehaving skill in its own PR, not inside the feature work where it went wrong.
 
-[Guide page 9](../../docs/guide/09-make-it-yours.md) covers each of these.
+[Guide page 9](https://github.com/volker48/mcstack/blob/main/plugins/mcstack/docs/guide/09-make-it-yours.md) covers each of these.
 
 ## Reply
 
