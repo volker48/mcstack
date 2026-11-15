@@ -58,16 +58,15 @@ claude plugin marketplace update mcstack
 
 ## Cloud sessions
 
-Cloud sessions don't install plugins that a repository enables in its `.claude/settings.json`, but a cloud session on a repository does load its `.claude/skills` and `.claude/agents`. Cloud threads in a Claude project load neither. To give the other cloud sessions mcstack, commit a copy to the repository:
+Cloud sessions don't install plugins that a repository enables in its `.claude/settings.json`, but a cloud session on a repository does load its `.claude/skills`. Cloud threads in a Claude project load neither. To give cloud sessions, and harnesses other than Claude Code, mcstack, commit a copy to the repository with the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-scripts/vendor-into-repo.sh /path/to/repo
+npx skills add volker48/mcstack
 ```
 
-It copies the skills and agents from this checkout's `HEAD`, rewrites what only works in a plugin, and records the source commit in the repository's `.claude/mcstack/README.md`. Rerun it to update. Edit skills here, never in the copy.
+It installs each skill once into `.agents/skills/`, which Codex, Pi, and most other harnesses read, and links it into `.claude/skills/` for Claude Code. `skills-lock.json` records the commit it came from, and `npx skills update` moves it forward. The skills brief their subagents from their own prompt files, so a copy needs no agent definitions. In a repository with a copy, turn the plugin off (`"mcstack@mcstack": false` under `enabledPlugins` in `.claude/settings.local.json`), so each skill loads once. Edit skills here, never in the copy.
 
 ## Layout
 
 - `plugins/<name>/` holds each plugin.
-- `scripts/vendor-into-repo.sh` copies mcstack into a repository for cloud sessions.
 - `repos/` holds vendored upstream sources, read-only. Adding the marketplace clones them too (about 9 MB).
